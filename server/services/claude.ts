@@ -24,25 +24,22 @@ export async function extractAndSimplifyContent(content: string, contentType?: s
 
   if (isUrl) {
     originalUrl = content.trim();
-    // Enhanced URL processing with specific instructions for different platforms
-    prompt = `I need you to access and extract the main content from this URL: ${content}
+    // Handle URLs by asking user to provide content instead
+    prompt = `I cannot directly access or browse URLs including YouTube videos, articles, or websites. However, I can help explain content if you provide:
 
-Please browse the webpage and extract the key information, then explain it in simple terms with easy examples and analogies.
+1. For YouTube videos: Copy and paste the video title, description, or transcript
+2. For articles: Copy the main text content from the webpage
+3. For any content: Provide the text you want me to explain
 
-Special instructions:
-- For YouTube videos: Extract the video title, description, and key points discussed
-- For articles/blogs: Extract the main content and key insights
-- For academic papers: Extract the abstract, methodology, and conclusions
-- For social media posts: Extract the main message and context
-- For any other content: Extract the core information and themes
+Based on the URL you provided (${content}), please copy the content you want explained and I'll provide a simplified explanation with easy examples and analogies.
 
-After extracting the content, explain it in simple, everyday language with real-world examples and analogies. Avoid technical jargon and make it accessible to everyone.
+For now, I'll provide general guidance about the type of content this URL likely contains:
 
 Format your response as:
-TITLE: [A clear, descriptive title for the content]
+TITLE: Content Processing Guidance
 
 EXPLANATION:
-[Your simplified explanation here in plain, conversational language]`;
+I cannot directly access URLs or browse the internet. To help you understand content from ${content}, please copy and paste the text, title, description, or transcript you want me to explain. Once you provide the actual content, I can break it down into simple terms with real-world examples and analogies that make it easy to understand.`;
   } else {
     // Handle different content types
     let contentDescription = "content";

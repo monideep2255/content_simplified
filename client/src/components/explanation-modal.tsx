@@ -38,6 +38,14 @@ export function ExplanationModal({ explanation, onClose }: ExplanationModalProps
       question: followupQuestion.trim() 
     });
     setFollowupQuestion("");
+    
+    // Scroll to show the new follow-up answer after a short delay
+    setTimeout(() => {
+      const followupContainer = document.querySelector('[data-modal-followup-container]');
+      if (followupContainer) {
+        followupContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
+    }, 1000);
   };
 
   const formatDate = (date: Date | string) => {
@@ -137,9 +145,9 @@ export function ExplanationModal({ explanation, onClose }: ExplanationModalProps
 
               {/* Follow-up Conversations */}
               {explanation.followups && explanation.followups.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-4" data-modal-followup-container>
                   {explanation.followups.map((followup) => (
-                    <div key={followup.id} className="bg-gray-50 rounded-lg p-4">
+                    <div key={followup.id} className="bg-gray-50 rounded-lg p-4 animate-in slide-in-from-bottom duration-300">
                       <div className="font-medium text-gray-900 mb-2">
                         Q: {followup.question}
                       </div>

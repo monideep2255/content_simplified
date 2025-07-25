@@ -26,31 +26,46 @@ Content Simplifier provides: • **Smart URL Processing**: Paste any link and ge
 
 ### **4\. 🔧 Feature Development Phases**
 
-**✨ Phase 1: Core Simplification Engine (MVP)** • URL input with automatic content detection • AI-powered explanation using custom prompt:
-
-* "Explain in simple terms with easy examples and analogies"  
-* Clean, readable output without markdown formatting • Content categories: AI, Money, Tech, Business, Other • Basic copy functionality
+**✨ Phase 1: Core Simplification Engine (MVP)** 
+- URL input with automatic content detection
+- AI-powered explanation using custom prompt:
+  - "Explain in simple terms with easy examples and analogies"
+  - Clean, readable output without markdown formatting • Content categories: AI, Money, Tech, Business, Other • Basic copy functionality
 
 **📚 Phase 2: Enhanced Organization**  
- • Save favorite explanations • Dropdown navigation system • Dedicated saved items page with grid layout • Category filtering and search • Progress tracking
+- Save favorite explanations
+- Dropdown navigation system
+- Dedicated saved items page with grid layout
+- Category filtering and search
+- Progress tracking
 
-**💬 Phase 3: Interactive Learning** • Follow-up question system without scroll jumping • Conversation-style interface  
- • Context-aware responses based on previous explanations • Smooth UI transitions
+**💬 Phase 3: Interactive Learning**
+- Follow-up question system without scroll jumping
+- Conversation-style interface
+- Context-aware responses based on previous explanations
+- Smooth UI transitions
 
-**🔗 Phase 4: Advanced URL Processing** • Support for YouTube, newsletters, articles, PDFs • Content preview before processing • Source link preservation • Multiple content format handling
+**🔗 Phase 4: Advanced URL Processing**
+- Support for YouTube, newsletters, articles, PDFs
+- Content preview before processing
+- Source link preservation
+- Multiple content format handling
 
-**🎯 Phase 5: Personalization** • Custom categories • Learning path recommendations  
- • Usage analytics • Export capabilities
+**🎯 Phase 5: Personalization**
+- Custom categories
+- Learning path recommendations
+- Usage analytics
+- Export capabilities
 
 ### **5\. 👥 User Personas / Stories**
 
-📖 **"As a curious learner, I want to understand complex articles without spending hours researching terminology."**
+📖 "As a curious learner, I want to understand complex articles without spending hours researching terminology."
 
-💼 **"As a busy professional, I want to quickly grasp newsletter content and save key insights for later reference."**
+💼 "As a busy professional, I want to quickly grasp newsletter content and save key insights for later reference."
 
-🎓 **"As a student, I want to break down academic or technical content into digestible explanations with examples."**
+🎓 "As a student, I want to break down academic or technical content into digestible explanations with examples."
 
-📱 **"As a content consumer, I want one tool that works with any URL and organizes my learning."**
+📱 "As a content consumer, I want one tool that works with any URL and organizes my learning."
 
 ### **6\. 🧠 AI Strategy**
 

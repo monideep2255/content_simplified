@@ -2,11 +2,19 @@
 
 ## Overview
 
-Content Simplifier is an AI-powered web application that transforms complex content into clear, understandable explanations. Users can input URLs or text content, and the system uses Claude AI to generate simplified explanations with real-world examples and analogies. The application also supports follow-up questions and content organization through categories.
+Content Simplifier is an AI-powered web application that transforms complex content into clear, understandable explanations. Users can input text content or upload files, and the system uses Claude AI to generate simplified explanations with real-world examples and analogies. The application supports follow-up questions and content organization through categories with persistent PostgreSQL storage.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Recent Changes (January 2025)
+
+✓ **Database Migration**: Switched from in-memory storage to PostgreSQL with Drizzle ORM
+✓ **Enhanced File Upload**: Added support for PDFs, Markdown, text files, images, and documents
+✓ **Improved UX**: Auto-scroll for follow-up answers, source links for content
+✓ **URL Handling**: Clear messaging that URLs cannot be processed directly - users must copy content
+✓ **Save Behavior**: Content is automatically saved when processed (no manual save required)
 
 ## System Architecture
 
@@ -14,7 +22,7 @@ The application follows a modern full-stack architecture with clear separation b
 
 - **Frontend**: React-based single-page application with TypeScript
 - **Backend**: Express.js server with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM (configured but currently using in-memory storage)
+- **Database**: PostgreSQL with Drizzle ORM for persistent data storage
 - **AI Integration**: Anthropic Claude API for content processing
 - **Styling**: Tailwind CSS with shadcn/ui components
 - **Build Tool**: Vite for development and production builds
@@ -88,10 +96,10 @@ The application uses Drizzle ORM with PostgreSQL schema for:
 - **Static Assets**: Served from Express server in production
 
 ### Storage Strategy
-The application is designed with storage abstraction:
-- **Current**: In-memory storage for rapid development and testing
-- **Production Ready**: PostgreSQL schema defined and migration-ready
-- **Flexibility**: Storage interface allows easy switching between implementations
+The application uses PostgreSQL for persistent data storage:
+- **Production**: PostgreSQL database with Drizzle ORM for type-safe database operations
+- **Schema**: Explanations and follow-up questions tables with proper relations
+- **Migration**: Drizzle Kit handles schema updates and database migrations
 
 ### Environment Configuration
 - **Development**: File-based configuration with environment detection

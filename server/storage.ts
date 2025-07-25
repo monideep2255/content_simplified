@@ -1,5 +1,6 @@
-import { type Explanation, type InsertExplanation, type FollowupQuestion, type InsertFollowupQuestion, type ExplanationWithFollowups } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { explanations, followupQuestions, type Explanation, type InsertExplanation, type FollowupQuestion, type InsertFollowupQuestion, type ExplanationWithFollowups } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Explanations
@@ -15,53 +16,37 @@ export interface IStorage {
   getFollowupsByExplanationId(explanationId: string): Promise<FollowupQuestion[]>;
 }
 
-export class MemStorage implements IStorage {
-  private explanations: Map<string, Explanation>;
-  private followupQuestions: Map<string, FollowupQuestion>;
-
-  constructor() {
-    this.explanations = new Map();
-    this.followupQuestions = new Map();
+export class DatabaseStorage implements IStorage {
+  async getExplanation(id: string): Promise<Explanation | undefined> {
+    const [explanation] = await db.select().from(explanations).where(eq(explanations.id, id));
+    return explanation || undefined;
   }
 
   async createExplanation(insertExplanation: InsertExplanation): Promise<Explanation> {
-    const id = randomUUID();
-    const explanation: Explanation = { 
-      ...insertExplanation, 
-      id,
-      sourceUrl: insertExplanation.sourceUrl || null,
-      createdAt: new Date()
-    };
-    this.explanations.set(id, explanation);
+    const [explanation] = await db
+      .insert(explanations)
+      .values(insertExplanation)
+      .returning();
     return explanation;
   }
 
-  async getExplanation(id: string): Promise<Explanation | undefined> {
-    return this.explanations.get(id);
-  }
-
   async getAllExplanations(): Promise<Explanation[]> {
-    return Array.from(this.explanations.values()).sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    return await db
+      .select()
+      .from(explanations)
+      .orderBy(explanations.createdAt);
   }
 
   async getExplanationsByCategory(category: string): Promise<Explanation[]> {
-    return Array.from(this.explanations.values())
-      .filter(exp => exp.category === category)
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return await db
+      .select()
+      .from(explanations)
+      .where(eq(explanations.category, category))
+      .orderBy(explanations.createdAt);
   }
 
   async deleteExplanation(id: string): Promise<void> {
-    this.explanations.delete(id);
-    // Also delete associated followups
-    const followupsToDelete = Array.from(this.followupQuestions.entries())
-      .filter(([_, followup]) => followup.explanationId === id)
-      .map(([id, _]) => id);
-    
-    followupsToDelete.forEach(followupId => {
-      this.followupQuestions.delete(followupId);
-    });
+    await db.delete(explanations).where(eq(explanations.id, id));
   }
 
   async getExplanationWithFollowups(id: string): Promise<ExplanationWithFollowups | undefined> {
@@ -73,21 +58,20 @@ export class MemStorage implements IStorage {
   }
 
   async createFollowupQuestion(insertFollowup: InsertFollowupQuestion): Promise<FollowupQuestion> {
-    const id = randomUUID();
-    const followup: FollowupQuestion = {
-      ...insertFollowup,
-      id,
-      createdAt: new Date()
-    };
-    this.followupQuestions.set(id, followup);
+    const [followup] = await db
+      .insert(followupQuestions)
+      .values(insertFollowup)
+      .returning();
     return followup;
   }
 
   async getFollowupsByExplanationId(explanationId: string): Promise<FollowupQuestion[]> {
-    return Array.from(this.followupQuestions.values())
-      .filter(followup => followup.explanationId === explanationId)
-      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    return await db
+      .select()
+      .from(followupQuestions)
+      .where(eq(followupQuestions.explanationId, explanationId))
+      .orderBy(followupQuestions.createdAt);
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();

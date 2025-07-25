@@ -127,6 +127,14 @@ export function MainPage() {
       question: followupQuestion.trim() 
     });
     setFollowupQuestion("");
+    
+    // Scroll to show the new follow-up answer after a short delay
+    setTimeout(() => {
+      const followupContainer = document.querySelector('[data-followup-container]');
+      if (followupContainer) {
+        followupContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
+    }, 1000);
   };
 
   const handleCopy = async () => {
@@ -150,14 +158,11 @@ export function MainPage() {
   const handleSave = () => {
     if (!explanation) return;
     
-    setSavedExplanation(explanation.id);
+    // Show confirmation that it's saved (explanation is automatically saved when created)
     toast({
       title: "Saved",
-      description: "Explanation has been saved to your collection.",
+      description: "This explanation is now in your saved collection.",
     });
-    
-    // Reset save state after 2 seconds
-    setTimeout(() => setSavedExplanation(null), 2000);
   };
 
   const getCategoryInfo = (cat: string) => {
@@ -186,7 +191,7 @@ export function MainPage() {
             <div className="space-y-3">
               <Textarea
                 id="content-input"
-                placeholder="Paste a URL (https://...), YouTube link, or any text content you want to understand better..."
+                placeholder="Paste text content, article titles, or video transcripts you want to understand better. Note: I cannot process URLs directly - please copy the content from the webpage instead."
                 className="min-h-32 resize-none"
                 value={content}
                 onChange={(e) => {
@@ -280,18 +285,34 @@ export function MainPage() {
       {explanation && (
         <Card ref={resultsRef} className="mb-8">
           <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <h3 className="text-xl font-semibold text-gray-900">
-                  {explanation.title}
-                </h3>
-                <Badge 
-                  variant="secondary" 
-                  className="flex items-center space-x-1"
-                >
-                  <div className={`w-2 h-2 rounded-full ${getCategoryInfo(explanation.category).color}`} />
-                  <span>{getCategoryInfo(explanation.category).label}</span>
-                </Badge>
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1">
+                <div className="flex items-center space-x-3 mb-2">
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {explanation.title}
+                  </h3>
+                  <Badge 
+                    variant="secondary" 
+                    className="flex items-center space-x-1"
+                  >
+                    <div className={`w-2 h-2 rounded-full ${getCategoryInfo(explanation.category).color}`} />
+                    <span>{getCategoryInfo(explanation.category).label}</span>
+                  </Badge>
+                </div>
+                
+                {explanation.sourceUrl && (
+                  <a
+                    href={explanation.sourceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-800 underline inline-flex items-center space-x-1"
+                  >
+                    <span>View Source</span>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                )}
               </div>
               
               <div className="flex space-x-2">
@@ -307,13 +328,9 @@ export function MainPage() {
                   variant="ghost"
                   size="sm"
                   onClick={handleSave}
-                  className={`transition-colors duration-200 ${
-                    savedExplanation === explanation.id 
-                      ? "text-green-600 hover:text-green-700" 
-                      : "text-gray-500 hover:text-green-600"
-                  }`}
+                  className="text-gray-500 hover:text-green-600 transition-colors duration-200"
                 >
-                  {savedExplanation === explanation.id ? <Check size={16} /> : <Bookmark size={16} />}
+                  <Bookmark size={16} />
                 </Button>
               </div>
             </div>
@@ -364,9 +381,9 @@ export function MainPage() {
 
               {/* Follow-up Conversations */}
               {explanation.followups && explanation.followups.length > 0 && (
-                <div className="space-y-4">
+                <div className="space-y-4" data-followup-container>
                   {explanation.followups.map((followup) => (
-                    <div key={followup.id} className="bg-gray-50 rounded-lg p-4">
+                    <div key={followup.id} className="bg-gray-50 rounded-lg p-4 animate-in slide-in-from-bottom duration-300">
                       <div className="font-medium text-gray-900 mb-2">
                         Q: {followup.question}
                       </div>
