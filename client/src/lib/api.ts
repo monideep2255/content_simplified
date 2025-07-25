@@ -29,7 +29,7 @@ export interface FollowupResponse {
   message?: string;
 }
 
-export async function simplifyContent(data: SimplifyContentRequest): Promise<SimplifyResponse> {
+export async function simplifyContent(data: SimplifyContentRequest & { contentType?: string; fileName?: string }): Promise<SimplifyResponse> {
   const res = await apiRequest("POST", "/api/simplify", data);
   return await res.json();
 }

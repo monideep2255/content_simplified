@@ -34,6 +34,8 @@ export const insertFollowupQuestionSchema = createInsertSchema(followupQuestions
 export const simplifyContentSchema = z.object({
   content: z.string().min(1, "Content is required"),
   category: z.enum(["ai", "money", "tech", "business", "other"]),
+  contentType: z.string().optional(),
+  fileName: z.string().optional(),
 });
 
 export const followupQuestionRequestSchema = z.object({

@@ -10,6 +10,11 @@ import {
 } from "@/lib/api";
 import type { SimplifyContentRequest, FollowupQuestionRequest } from "@shared/schema";
 
+type ExtendedSimplifyRequest = SimplifyContentRequest & { 
+  contentType?: string; 
+  fileName?: string; 
+};
+
 export function useContentSimplifier() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -91,7 +96,7 @@ export function useContentSimplifier() {
   });
 
   return {
-    simplifyContent: (data: SimplifyContentRequest) => simplifyMutation.mutate(data),
+    simplifyContent: (data: ExtendedSimplifyRequest) => simplifyMutation.mutate(data),
     addFollowup: (data: FollowupQuestionRequest) => followupMutation.mutate(data),
     deleteExplanation: (id: string) => deleteMutation.mutate(id),
     isSimplifying: simplifyMutation.isPending,

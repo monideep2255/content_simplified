@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Bookmark, Loader2, Wand2, MessageCircle, Check } from "lucide-react";
+import { Copy, Bookmark, Loader2, Wand2, MessageCircle, Check, Upload, FileText } from "lucide-react";
 import { useContentSimplifier } from "@/hooks/use-content-simplifier";
 import { useToast } from "@/hooks/use-toast";
 import type { ExplanationWithFollowups } from "@shared/schema";
@@ -24,7 +24,10 @@ export function MainPage() {
   const [category, setCategory] = useState<"ai" | "money" | "tech" | "business" | "other">("ai");
   const [followupQuestion, setFollowupQuestion] = useState("");
   const [savedExplanation, setSavedExplanation] = useState<string | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [contentType, setContentType] = useState<string>("");
   const resultsRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const { 
@@ -37,17 +40,71 @@ export function MainPage() {
 
   const explanation = simplificationResult?.explanation;
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadedFile(file);
+    setContentType(file.type);
+
+    try {
+      const fileContent = await readFileContent(file);
+      setContent(fileContent);
+      
+      toast({
+        title: "File Uploaded",
+        description: `${file.name} has been loaded successfully.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Upload Error",
+        description: "Failed to read file content.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const readFileContent = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e) => {
+        const result = e.target?.result;
+        if (typeof result === 'string') {
+          resolve(result);
+        } else {
+          reject(new Error('Failed to read file as text'));
+        }
+      };
+      
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      
+      if (file.type.startsWith('image/')) {
+        reader.readAsDataURL(file);
+      } else {
+        reader.readAsText(file);
+      }
+    });
+  };
+
   const handleSimplify = () => {
     if (!content.trim()) {
       toast({
         title: "Content Required",
-        description: "Please enter some content to simplify.",
+        description: "Please enter some content or upload a file to simplify.",
         variant: "destructive",
       });
       return;
     }
 
-    simplifyContent({ content: content.trim(), category });
+    const requestData = {
+      content: content.trim(),
+      category,
+      contentType: contentType || undefined,
+      fileName: uploadedFile?.name || undefined,
+    };
+
+    simplifyContent(requestData);
     
     // Scroll to results after a short delay
     setTimeout(() => {
@@ -126,13 +183,56 @@ export function MainPage() {
             <Label htmlFor="content-input" className="block text-sm font-medium text-gray-700 mb-2">
               Content to Simplify
             </Label>
-            <Textarea
-              id="content-input"
-              placeholder="Paste a URL (https://...) or any text content you want to understand better..."
-              className="min-h-32 resize-none"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
+            <div className="space-y-3">
+              <Textarea
+                id="content-input"
+                placeholder="Paste a URL (https://...), YouTube link, or any text content you want to understand better..."
+                className="min-h-32 resize-none"
+                value={content}
+                onChange={(e) => {
+                  setContent(e.target.value);
+                  setUploadedFile(null);
+                  setContentType("");
+                }}
+              />
+              
+              <div className="flex items-center justify-center">
+                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                  <span>OR</span>
+                </div>
+              </div>
+
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept=".pdf,.txt,.md,.doc,.docx,image/*"
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex flex-col items-center space-y-2 h-auto py-4"
+                >
+                  <Upload className="text-gray-400" size={24} />
+                  <span className="text-sm font-medium text-gray-700">
+                    Upload File
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    PDF, Markdown, Text, Images, Documents
+                  </span>
+                </Button>
+                
+                {uploadedFile && (
+                  <div className="mt-3 flex items-center justify-center space-x-2 text-sm text-green-600">
+                    <FileText size={16} />
+                    <span>{uploadedFile.name}</span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 mb-6">

@@ -15,9 +15,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Simplify content endpoint
   app.post("/api/simplify", async (req, res) => {
     try {
-      const { content, category } = simplifyContentSchema.parse(req.body);
+      const { content, category, contentType, fileName } = simplifyContentSchema.parse(req.body);
       
-      const result = await extractAndSimplifyContent(content);
+      const result = await extractAndSimplifyContent(content, contentType);
       
       const explanation = await storage.createExplanation({
         title: result.title,

@@ -16,7 +16,7 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY,
 });
 
-export async function extractAndSimplifyContent(content: string): Promise<{ title: string; simplified: string; isUrl: boolean; originalUrl?: string }> {
+export async function extractAndSimplifyContent(content: string, contentType?: string): Promise<{ title: string; simplified: string; isUrl: boolean; originalUrl?: string }> {
   const isUrl = /^https?:\/\/.+/.test(content.trim());
   
   let prompt: string;
@@ -24,19 +24,36 @@ export async function extractAndSimplifyContent(content: string): Promise<{ titl
 
   if (isUrl) {
     originalUrl = content.trim();
-    prompt = `I need you to browse and extract content from: ${content}
+    // Enhanced URL processing with specific instructions for different platforms
+    prompt = `I need you to access and extract the main content from this URL: ${content}
 
-Then explain the content in simple terms and deep detail with easy examples and analogies. Provide clean, readable text without markdown formatting.
+Please browse the webpage and extract the key information, then explain it in simple terms with easy examples and analogies.
 
-Use natural paragraphs and conversational language. Make complex concepts accessible to everyone through real-world comparisons.
+Special instructions:
+- For YouTube videos: Extract the video title, description, and key points discussed
+- For articles/blogs: Extract the main content and key insights
+- For academic papers: Extract the abstract, methodology, and conclusions
+- For social media posts: Extract the main message and context
+- For any other content: Extract the core information and themes
+
+After extracting the content, explain it in simple, everyday language with real-world examples and analogies. Avoid technical jargon and make it accessible to everyone.
 
 Format your response as:
 TITLE: [A clear, descriptive title for the content]
 
 EXPLANATION:
-[Your simplified explanation here]`;
+[Your simplified explanation here in plain, conversational language]`;
   } else {
-    prompt = `Explain the following content in simple terms and deep detail with easy examples and analogies. Provide clean, readable text without markdown formatting.
+    // Handle different content types
+    let contentDescription = "content";
+    if (contentType) {
+      if (contentType.includes('pdf')) contentDescription = "PDF document";
+      else if (contentType.includes('image')) contentDescription = "image";
+      else if (contentType.includes('markdown')) contentDescription = "markdown document";
+      else if (contentType.includes('text')) contentDescription = "text content";
+    }
+
+    prompt = `Explain the following ${contentDescription} in simple terms and deep detail with easy examples and analogies. Provide clean, readable text without markdown formatting.
 
 Use natural paragraphs and conversational language. Make complex concepts accessible to everyone through real-world comparisons.
 
@@ -54,7 +71,7 @@ EXPLANATION:
     const response = await anthropic.messages.create({
       // "claude-sonnet-4-20250514"
       model: DEFAULT_MODEL_STR,
-      max_tokens: 2000,
+      max_tokens: 3000,
       messages: [{ role: 'user', content: prompt }],
     });
 
