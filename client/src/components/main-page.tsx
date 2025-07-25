@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Bookmark, Loader2, Wand2, MessageCircle, Check, Upload, FileText } from "lucide-react";
+import { Copy, Loader2, Wand2, MessageCircle, Upload, FileText } from "lucide-react";
 import { useContentSimplifier } from "@/hooks/use-content-simplifier";
 import { useToast } from "@/hooks/use-toast";
 import type { ExplanationWithFollowups } from "@shared/schema";
@@ -33,10 +33,8 @@ export function MainPage() {
   const { 
     simplifyContent, 
     addFollowup, 
-    saveExplanation,
     isSimplifying, 
     isAddingFollowup, 
-    isSaving,
     simplificationResult 
   } = useContentSimplifier();
 
@@ -181,10 +179,11 @@ export function MainPage() {
     if (!explanation) return;
     
     try {
-      await navigator.clipboard.writeText(explanation.simplifiedContent);
+      const textToCopy = `${explanation.title}\n\n${explanation.simplifiedContent}`;
+      await navigator.clipboard.writeText(textToCopy);
       toast({
         title: "Copied",
-        description: "Explanation copied to clipboard.",
+        description: "Explanation has been copied to clipboard.",
       });
     } catch (error) {
       toast({
@@ -193,19 +192,6 @@ export function MainPage() {
         variant: "destructive",
       });
     }
-  };
-
-  const handleSave = () => {
-    if (!explanation) return;
-    
-    // Save explanation to database
-    saveExplanation({
-      title: explanation.title,
-      originalContent: explanation.originalContent,
-      simplifiedContent: explanation.simplifiedContent,
-      category: explanation.category,
-      sourceUrl: explanation.sourceUrl || null,
-    });
   };
 
   const getCategoryInfo = (cat: string) => {
@@ -366,19 +352,6 @@ export function MainPage() {
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <Copy size={16} />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="text-gray-500 hover:text-green-600 transition-colors duration-200"
-                >
-                  {isSaving ? (
-                    <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Bookmark size={16} />
-                  )}
                 </Button>
               </div>
             </div>

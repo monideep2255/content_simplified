@@ -8,13 +8,14 @@ Content Simplifier is an AI-powered web application that transforms complex cont
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (January 2025)
+## Recent Changes (July 2025)
 
-✓ **Database Migration**: Switched from in-memory storage to PostgreSQL with Drizzle ORM
+✓ **Simplified Architecture**: Removed database completely - app is now session-based only
 ✓ **Enhanced File Upload**: Added support for PDFs, Markdown, text files, images, and documents
 ✓ **Improved UX**: Auto-scroll for follow-up answers, source links for content
 ✓ **URL Handling**: Clear messaging that URLs cannot be processed directly - users must copy content
-✓ **Save Behavior**: Content is automatically saved when processed (no manual save required)
+✓ **Single Page App**: Removed navigation and saved items - focus purely on content simplification
+✓ **Privacy-First**: No data persistence ensures complete privacy for user content
 
 ## System Architecture
 
@@ -22,7 +23,7 @@ The application follows a modern full-stack architecture with clear separation b
 
 - **Frontend**: React-based single-page application with TypeScript
 - **Backend**: Express.js server with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM for persistent data storage
+- **Storage**: Session-based architecture (no database required)
 - **AI Integration**: Anthropic Claude API for content processing
 - **Styling**: Tailwind CSS with shadcn/ui components
 - **Build Tool**: Vite for development and production builds
@@ -40,13 +41,13 @@ The application follows a modern full-stack architecture with clear separation b
 - **Server**: Express.js with TypeScript
 - **API Design**: RESTful endpoints with proper error handling
 - **Middleware**: JSON parsing, CORS handling, and request logging
-- **Storage**: Abstracted storage interface (currently in-memory, ready for database)
+- **Storage**: Session-based - no persistent storage required
 - **AI Service**: Separate service layer for Claude API integration
 
-### Database Schema
-The application uses Drizzle ORM with PostgreSQL schema for:
-- **Explanations**: Stores simplified content with metadata
-- **Followup Questions**: Linked to explanations for conversation context
+### Data Model
+The application uses simple TypeScript interfaces for session-based data:
+- **Explanations**: Temporary simplified content with metadata
+- **Followup Questions**: In-memory conversation context
 - **Categories**: Predefined categories (AI, Money, Tech, Business, Other)
 
 ### AI Processing Pipeline
@@ -56,20 +57,20 @@ The application uses Drizzle ORM with PostgreSQL schema for:
 
 ## Data Flow
 
-1. **Content Input**: User provides URL or text content with category selection
+1. **Content Input**: User provides text content or uploads files with category selection
 2. **AI Processing**: Content sent to Claude API for extraction and simplification
-3. **Storage**: Processed explanation stored with metadata and category
+3. **Session Display**: Processed explanation displayed temporarily in current session
 4. **Display**: Simplified content displayed with follow-up question capability
 5. **Follow-up Questions**: Additional questions processed with context from original explanation
-6. **Organization**: Content categorized and accessible through saved items page
+6. **Copy & Save**: Users can copy content to clipboard for their own organization
 
 ## External Dependencies
 
 ### Core Dependencies
 - **@anthropic-ai/sdk**: Claude AI integration for content processing
-- **@neondatabase/serverless**: PostgreSQL database connectivity
-- **drizzle-orm**: Type-safe database ORM
 - **@tanstack/react-query**: Server state management and caching
+- **express**: Backend server framework
+- **typescript**: Type safety and developer experience
 
 ### UI Dependencies
 - **@radix-ui/***: Comprehensive set of UI primitives
@@ -86,22 +87,22 @@ The application uses Drizzle ORM with PostgreSQL schema for:
 
 ### Development Environment
 - **Local Development**: Vite dev server with hot module replacement
-- **Database**: Configured for PostgreSQL with Drizzle migrations
-- **Environment Variables**: Claude API key and database URL required
+- **No Database**: No database setup required - purely session-based
+- **Environment Variables**: Only Claude API key required
 
 ### Production Build
 - **Frontend**: Vite builds optimized static assets
 - **Backend**: esbuild bundles server code for Node.js deployment
-- **Database**: Drizzle migrations handle schema updates
+- **No Database**: No database migrations or setup needed
 - **Static Assets**: Served from Express server in production
 
 ### Storage Strategy
-The application uses PostgreSQL for persistent data storage:
-- **Production**: PostgreSQL database with Drizzle ORM for type-safe database operations
-- **Schema**: Explanations and follow-up questions tables with proper relations
-- **Migration**: Drizzle Kit handles schema updates and database migrations
+The application uses a session-based approach for simplicity:
+- **Session-Only**: All content exists only during the current browser session
+- **Privacy-First**: No data persistence ensures complete user privacy
+- **Deployment-Simple**: No database setup or maintenance required
 
 ### Environment Configuration
 - **Development**: File-based configuration with environment detection
-- **Production**: Environment variables for sensitive configuration
-- **Replit Integration**: Special handling for Replit deployment environment
+- **Production**: Only requires ANTHROPIC_API_KEY environment variable
+- **Replit Integration**: Simplified deployment with no database dependencies

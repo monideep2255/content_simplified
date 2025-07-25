@@ -2,6 +2,8 @@
 
 **Your AI-Powered Content Understanding Companion**
 
+*Last Updated: July 25, 2025*
+
 Transform complex content into clear, understandable explanations with real-world examples and analogies. Whether it's AI developments, cryptocurrency trends, or business insights, Content Simplifier makes any content accessible to everyone.
 
 ![Content Simplifier Demo](https://img.shields.io/badge/Status-Live-brightgreen) ![Version](https://img.shields.io/badge/Version-1.0-blue)
@@ -15,27 +17,41 @@ Content Simplifier is a web application that takes complex text content and brea
 - 🎓 **Students** who want to break down academic or technical content
 - 📱 **Content consumers** who want one tool to organize their learning
 
-## ✨ Key Features
+## ✨ Features
 
-### 🤖 AI-Powered Simplification
+### ✅ Currently Implemented (Phase 1-3)
+
+#### 🤖 AI-Powered Simplification
 - **Smart Content Processing**: Paste text content and get instant AI-powered explanations
 - **Real-World Examples**: Complex concepts explained with analogies and examples everyone can understand
 - **Clean Output**: No jargon, no technical mumbo-jumbo - just clear, conversational explanations
 
-### 💬 Interactive Follow-Up Questions
+#### 💬 Interactive Follow-Up Questions
 - **Ask Anything**: Have questions about an explanation? Just ask!
 - **Conversational Interface**: Follow-up answers appear smoothly like a chatbot
 - **Context-Aware**: AI remembers the original explanation for better follow-up responses
 
-### 📚 Smart Organization
-- **Category System**: Organize content by AI, Money, Tech, Business, or Other
-- **Save What Matters**: Only save explanations you want to keep (no automatic saving)
-- **Easy Browsing**: View saved explanations in an organized grid with filtering options
-
-### 🔗 Source Tracking
+#### 🔗 Source Tracking
 - **Source Links**: Always know where content came from with clickable source links
 - **Content Types**: Support for text content, article titles, video transcripts, and more
 - **File Upload**: Upload PDFs, Markdown files, text documents, and images
+
+#### 📂 Basic Organization
+- **Category System**: Organize content by AI, Money, Tech, Business, or Other
+- **Session-Based**: Content remains available during your current session
+
+### 🚧 Coming Next (Future Versions)
+
+#### 📚 Persistent Storage (Optional)
+- **Save What Matters**: Save explanations you want to keep for later
+- **Easy Browsing**: View saved explanations in an organized grid with filtering options
+- **Cross-Session Access**: Access your saved content anytime
+
+#### 🎯 Advanced Features
+- **Custom Categories**: Create your own content categories
+- **Learning Path Recommendations**: AI-suggested content based on your interests
+- **Export Capabilities**: Export your explanations in various formats
+- **Usage Analytics**: Track your learning progress
 
 ## 🚀 Getting Started
 
@@ -43,7 +59,6 @@ Content Simplifier is a web application that takes complex text content and brea
 
 - Node.js (version 18 or higher)
 - Anthropic API Key (for Claude AI)
-- PostgreSQL database (for saving explanations)
 
 ### Installation
 
@@ -62,20 +77,14 @@ Content Simplifier is a web application that takes complex text content and brea
    Create a `.env` file in the root directory:
    ```env
    ANTHROPIC_API_KEY=your_anthropic_api_key_here
-   DATABASE_URL=your_postgresql_database_url_here
    ```
 
-4. **Set up the database**
-   ```bash
-   npm run db:push
-   ```
-
-5. **Start the development server**
+4. **Start the development server**
    ```bash
    npm run dev
    ```
 
-6. **Open your browser**
+5. **Open your browser**
    Navigate to `http://localhost:5000` to start using Content Simplifier!
 
 ### Getting Your API Key
@@ -94,20 +103,17 @@ Content Simplifier is a web application that takes complex text content and brea
 2. **Choose Category**: Select the most appropriate category (AI, Money, Tech, Business, Other)
 3. **Get Explanation**: Click "Simplify Content" and wait for your clear explanation
 4. **Ask Follow-ups**: Have questions? Type them in the follow-up box for more details
-5. **Save if Needed**: Click the bookmark icon to save explanations you want to keep
+5. **Copy if Needed**: Click the copy icon to save explanations to your clipboard
 
 ### Important Notes
 
 - **URLs**: The app cannot directly process URLs or web links. Copy the content from the webpage instead
 - **File Support**: Upload PDFs, Markdown files, text documents, and images for processing
-- **Saving**: Content is only saved when you click the bookmark button - nothing is saved automatically
+- **Session-Based**: All content is temporary and only available during your current session
 
 ### Navigation
 
-- **Home**: Main simplification interface
-- **Saved Items**: View and manage your saved explanations
-- **Categories**: Filter saved content by category
-- **Search**: Find specific explanations quickly
+The app now has a simplified single-page interface focused entirely on content simplification. No navigation is needed as all functionality is available on the main page.
 
 ## 🛠 Technical Architecture
 
@@ -119,15 +125,15 @@ Content Simplifier is a web application that takes complex text content and brea
 
 ### Backend
 - **Express.js** server with TypeScript
-- **PostgreSQL** database with Drizzle ORM
+- **Session-based architecture** (no database required)
 - **Anthropic Claude API** for AI-powered content processing
 - **RESTful API** design with proper error handling
 
 ### Key Technologies
 - **Claude 4.0 Sonnet**: Latest AI model for best explanation quality
-- **Drizzle ORM**: Type-safe database operations
 - **Vite**: Fast development and build tooling
-- **Wouter**: Lightweight client-side routing
+- **TypeScript**: Type safety and developer experience
+- **Tailwind CSS**: Modern styling framework
 
 ## 📁 Project Structure
 
@@ -141,9 +147,7 @@ content-simplifier/
 │   │   └── pages/         # Page components
 ├── server/                # Backend Express server
 │   ├── services/          # Business logic (Claude AI integration)
-│   ├── routes.ts          # API route definitions
-│   ├── storage.ts         # Database operations
-│   └── db.ts             # Database configuration
+│   └── routes.ts          # API route definitions
 ├── shared/                # Shared types and schemas
 └── README.md             # You are here!
 ```
@@ -174,8 +178,6 @@ content-simplifier/
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
-- `npm run db:push` - Push database schema changes
-- `npm run db:studio` - Open database management interface
 
 ### Contributing
 
@@ -191,6 +193,7 @@ content-simplifier/
 - **File Size**: Large files may cause processing delays
 - **API Limits**: Subject to Anthropic API rate limits and usage quotas
 - **Language**: Currently optimized for English content
+- **Session-Based**: Content is not saved between sessions (by design for simplicity)
 
 ## 🔐 Privacy & Security
 
