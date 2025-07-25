@@ -12,25 +12,24 @@ import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   
-  // Simplify content endpoint
+  // Simplify content endpoint (no auto-save)
   app.post("/api/simplify", async (req, res) => {
     try {
       const { content, category, contentType, fileName } = simplifyContentSchema.parse(req.body);
       
       const result = await extractAndSimplifyContent(content, contentType);
       
-      const explanation = await storage.createExplanation({
-        title: result.title,
-        originalContent: content,
-        simplifiedContent: result.simplified,
-        category,
-        sourceUrl: result.originalUrl || null,
-      });
-
+      // Return explanation without saving to database
       res.json({ 
         success: true, 
         explanation: {
-          ...explanation,
+          id: `temp-${Date.now()}`, // Temporary ID for UI
+          title: result.title,
+          originalContent: content,
+          simplifiedContent: result.simplified,
+          category,
+          sourceUrl: result.originalUrl || null,
+          createdAt: new Date(),
           followups: []
         }
       });
@@ -46,6 +45,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false, 
         message: error instanceof Error ? error.message : "Failed to simplify content" 
+      });
+    }
+  });
+
+  // Save explanation endpoint (manual save)
+  app.post("/api/explanations", async (req, res) => {
+    try {
+      const explanationData = insertExplanationSchema.parse(req.body);
+      
+      const explanation = await storage.createExplanation(explanationData);
+
+      res.json({ 
+        success: true, 
+        explanation: {
+          ...explanation,
+          followups: []
+        }
+      });
+    } catch (error) {
+      console.error('Save explanation error:', error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid request data",
+          errors: error.errors 
+        });
+      }
+      res.status(500).json({ 
+        success: false, 
+        message: error instanceof Error ? error.message : "Failed to save explanation" 
       });
     }
   });
@@ -125,11 +154,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Add followup question
+  // Add followup question (works for both saved and temporary explanations)
   app.post("/api/followup", async (req, res) => {
     try {
       const { explanationId, question } = followupQuestionRequestSchema.parse(req.body);
       
+      // Check if this is a temporary explanation (starts with 'temp-')
+      if (explanationId.startsWith('temp-')) {
+        // For temporary explanations, just generate an answer without saving
+        const answer = await answerFollowupQuestion("", question);
+        
+        const followup = {
+          id: `temp-followup-${Date.now()}`,
+          explanationId,
+          question,
+          answer,
+          createdAt: new Date()
+        };
+
+        return res.json({ success: true, followup });
+      }
+
+      // For saved explanations, save to database
       const explanation = await storage.getExplanation(explanationId);
       if (!explanation) {
         return res.status(404).json({ 

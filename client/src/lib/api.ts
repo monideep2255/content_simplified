@@ -2,7 +2,8 @@ import { apiRequest } from "@/lib/queryClient";
 import type { 
   SimplifyContentRequest, 
   FollowupQuestionRequest, 
-  ExplanationWithFollowups 
+  ExplanationWithFollowups,
+  InsertExplanation 
 } from "@shared/schema";
 
 export interface SimplifyResponse {
@@ -52,5 +53,10 @@ export async function deleteExplanation(id: string): Promise<{ success: boolean;
 
 export async function addFollowupQuestion(data: FollowupQuestionRequest): Promise<FollowupResponse> {
   const res = await apiRequest("POST", "/api/followup", data);
+  return await res.json();
+}
+
+export async function saveExplanation(data: InsertExplanation): Promise<ExplanationResponse> {
+  const res = await apiRequest("POST", "/api/explanations", data);
   return await res.json();
 }

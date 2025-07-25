@@ -6,9 +6,10 @@ import {
   getExplanations, 
   getExplanation,
   deleteExplanation,
-  addFollowupQuestion 
+  addFollowupQuestion,
+  saveExplanation 
 } from "@/lib/api";
-import type { SimplifyContentRequest, FollowupQuestionRequest } from "@shared/schema";
+import type { SimplifyContentRequest, FollowupQuestionRequest, InsertExplanation } from "@shared/schema";
 
 type ExtendedSimplifyRequest = SimplifyContentRequest & { 
   contentType?: string; 
@@ -27,7 +28,7 @@ export function useContentSimplifier() {
           title: "Content Simplified",
           description: "Your content has been successfully explained.",
         });
-        queryClient.invalidateQueries({ queryKey: ["/api/explanations"] });
+        // Don't invalidate queries since we're not auto-saving
       } else {
         toast({
           title: "Error",
@@ -40,6 +41,32 @@ export function useContentSimplifier() {
       toast({
         title: "Error",
         description: error.message || "Failed to simplify content",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: saveExplanation,
+    onSuccess: (data) => {
+      if (data.success) {
+        toast({
+          title: "Saved",
+          description: "Explanation has been saved to your collection.",
+        });
+        queryClient.invalidateQueries({ queryKey: ["/api/explanations"] });
+      } else {
+        toast({
+          title: "Error",
+          description: data.message || "Failed to save explanation",
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save explanation",
         variant: "destructive",
       });
     },
@@ -99,9 +126,11 @@ export function useContentSimplifier() {
     simplifyContent: (data: ExtendedSimplifyRequest) => simplifyMutation.mutate(data),
     addFollowup: (data: FollowupQuestionRequest) => followupMutation.mutate(data),
     deleteExplanation: (id: string) => deleteMutation.mutate(id),
+    saveExplanation: (data: InsertExplanation) => saveMutation.mutate(data),
     isSimplifying: simplifyMutation.isPending,
     isAddingFollowup: followupMutation.isPending,
     isDeleting: deleteMutation.isPending,
+    isSaving: saveMutation.isPending,
     simplificationResult: simplifyMutation.data,
   };
 }

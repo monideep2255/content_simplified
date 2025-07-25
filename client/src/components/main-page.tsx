@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -33,12 +33,21 @@ export function MainPage() {
   const { 
     simplifyContent, 
     addFollowup, 
+    saveExplanation,
     isSimplifying, 
     isAddingFollowup, 
+    isSaving,
     simplificationResult 
   } = useContentSimplifier();
 
-  const explanation = simplificationResult?.explanation;
+  const [explanation, setExplanation] = useState<ExplanationWithFollowups | null>(null);
+
+  // Update explanation when simplification result changes
+  useEffect(() => {
+    if (simplificationResult?.explanation) {
+      setExplanation(simplificationResult.explanation);
+    }
+  }, [simplificationResult]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -112,7 +121,7 @@ export function MainPage() {
     }, 500);
   };
 
-  const handleFollowup = () => {
+  const handleFollowup = async () => {
     if (!followupQuestion.trim() || !explanation) {
       toast({
         title: "Question Required",
@@ -122,19 +131,50 @@ export function MainPage() {
       return;
     }
 
-    addFollowup({ 
-      explanationId: explanation.id, 
-      question: followupQuestion.trim() 
-    });
+    const question = followupQuestion.trim();
     setFollowupQuestion("");
-    
-    // Scroll to show the new follow-up answer after a short delay
-    setTimeout(() => {
-      const followupContainer = document.querySelector('[data-followup-container]');
-      if (followupContainer) {
-        followupContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+    try {
+      // Call the API directly to get the answer
+      const response = await fetch('/api/followup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          explanationId: explanation.id,
+          question: question
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.followup) {
+        // Update the explanation state with the new followup
+        setExplanation(prev => prev ? {
+          ...prev,
+          followups: [...(prev.followups || []), result.followup]
+        } : null);
+
+        // Scroll to show the new follow-up answer
+        setTimeout(() => {
+          const followupContainer = document.querySelector('[data-followup-container]');
+          if (followupContainer) {
+            followupContainer.scrollIntoView({ behavior: 'smooth', block: 'end' });
+          }
+        }, 500);
+      } else {
+        toast({
+          title: "Error",
+          description: result.message || "Failed to process follow-up question",
+          variant: "destructive",
+        });
       }
-    }, 1000);
+    } catch (error) {
+      toast({
+        title: "Error", 
+        description: "Failed to process follow-up question",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCopy = async () => {
@@ -158,10 +198,13 @@ export function MainPage() {
   const handleSave = () => {
     if (!explanation) return;
     
-    // Show confirmation that it's saved (explanation is automatically saved when created)
-    toast({
-      title: "Saved",
-      description: "This explanation is now in your saved collection.",
+    // Save explanation to database
+    saveExplanation({
+      title: explanation.title,
+      originalContent: explanation.originalContent,
+      simplifiedContent: explanation.simplifiedContent,
+      category: explanation.category,
+      sourceUrl: explanation.sourceUrl || null,
     });
   };
 
@@ -328,9 +371,14 @@ export function MainPage() {
                   variant="ghost"
                   size="sm"
                   onClick={handleSave}
+                  disabled={isSaving}
                   className="text-gray-500 hover:text-green-600 transition-colors duration-200"
                 >
-                  <Bookmark size={16} />
+                  {isSaving ? (
+                    <div className="w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Bookmark size={16} />
+                  )}
                 </Button>
               </div>
             </div>

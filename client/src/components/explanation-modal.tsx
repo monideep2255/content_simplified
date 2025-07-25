@@ -99,7 +99,7 @@ export function ExplanationModal({ explanation, onClose }: ExplanationModalProps
               )}
             </div>
             
-            <div className="prose max-w-none mb-8">
+            <div className="prose max-w-none mb-8 max-h-96 overflow-y-auto">
               {explanation.simplifiedContent.split('\n').map((paragraph, index) => (
                 <p key={index} className="text-gray-800 leading-relaxed mb-4 last:mb-0">
                   {paragraph}
