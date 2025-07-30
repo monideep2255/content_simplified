@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, BookmarkIcon, Trash2, Copy, Calendar } from "lucide-react";
+import { Search, BookmarkIcon, Trash2, Copy, Calendar, Brain, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   getAllExplanations, 
@@ -16,6 +16,8 @@ import {
 } from "@/lib/api";
 import type { ExplanationWithFollowups } from "@shared/schema";
 import { format } from "date-fns";
+import { Link } from "wouter";
+import ExplanationModal from "@/components/explanation-modal";
 
 const categoryColors = {
   ai: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
@@ -40,6 +42,8 @@ export default function HistoryPage() {
     bookmarkedOnly: false
   });
   const [activeTab, setActiveTab] = useState("all");
+  const [selectedExplanation, setSelectedExplanation] = useState<ExplanationWithFollowups | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Fetch all explanations
   const { data: allExplanationsData, isLoading: allLoading } = useQuery({
@@ -111,6 +115,11 @@ export default function HistoryPage() {
     });
   };
 
+  const handleViewExplanation = (explanation: ExplanationWithFollowups) => {
+    setSelectedExplanation(explanation);
+    setIsModalOpen(true);
+  };
+
   const allExplanations = allExplanationsData?.explanations || [];
   const bookmarkedExplanations = allExplanations.filter(e => e.isBookmarked);
   const searchResults = searchMutation.data?.explanations || [];
@@ -134,12 +143,22 @@ export default function HistoryPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Content History
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Browse and manage your saved explanations
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                Content History
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300">
+                Browse and manage your saved explanations
+              </p>
+            </div>
+            <Link href="/">
+              <Button variant="outline" className="flex items-center gap-2">
+                <Brain className="w-4 h-4" />
+                Back to Home
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -219,8 +238,17 @@ export default function HistoryPage() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => handleViewExplanation(explanation)}
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => bookmarkMutation.mutate(explanation.id)}
                             disabled={bookmarkMutation.isPending}
+                            title="Toggle Bookmark"
                           >
                             <BookmarkIcon 
                               className={`w-4 h-4 ${explanation.isBookmarked ? 'fill-current text-yellow-500' : 'text-gray-400'}`} 
@@ -230,6 +258,7 @@ export default function HistoryPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCopyExplanation(explanation)}
+                            title="Copy to Clipboard"
                           >
                             <Copy className="w-4 h-4" />
                           </Button>
@@ -238,6 +267,7 @@ export default function HistoryPage() {
                             size="sm"
                             onClick={() => deleteMutation.mutate(explanation.id)}
                             disabled={deleteMutation.isPending}
+                            title="Delete"
                           >
                             <Trash2 className="w-4 h-4 text-red-500" />
                           </Button>
@@ -287,8 +317,17 @@ export default function HistoryPage() {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => handleViewExplanation(explanation)}
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => bookmarkMutation.mutate(explanation.id)}
                             disabled={bookmarkMutation.isPending}
+                            title="Toggle Bookmark"
                           >
                             <BookmarkIcon className="w-4 h-4 fill-current text-yellow-500" />
                           </Button>
@@ -296,6 +335,7 @@ export default function HistoryPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleCopyExplanation(explanation)}
+                            title="Copy to Clipboard"
                           >
                             <Copy className="w-4 h-4" />
                           </Button>
@@ -304,6 +344,7 @@ export default function HistoryPage() {
                             size="sm"
                             onClick={() => deleteMutation.mutate(explanation.id)}
                             disabled={deleteMutation.isPending}
+                            title="Delete"
                           >
                             <Trash2 className="w-4 h-4 text-red-500" />
                           </Button>
@@ -319,7 +360,10 @@ export default function HistoryPage() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent 
+                      className="cursor-pointer"
+                      onClick={() => handleViewExplanation(explanation)}
+                    >
                       <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 mb-3">
                         {explanation.simplifiedContent}
                       </p>
@@ -335,6 +379,13 @@ export default function HistoryPage() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Explanation Modal */}
+        <ExplanationModal 
+          explanation={selectedExplanation}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+        />
       </div>
     </div>
   );
