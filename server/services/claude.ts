@@ -24,22 +24,18 @@ export async function extractAndSimplifyContent(content: string, contentType?: s
 
   if (isUrl) {
     originalUrl = content.trim();
-    // Handle URLs by asking user to provide content instead
-    prompt = `I cannot directly access or browse URLs including YouTube videos, articles, or websites. However, I can help explain content if you provide:
+    // Use Claude's web search capability to fetch and explain URL content
+    prompt = `Please search the web and access the content from this URL: ${content}
 
-1. For YouTube videos: Copy and paste the video title, description, or transcript
-2. For articles: Copy the main text content from the webpage
-3. For any content: Provide the text you want me to explain
+Then explain the content in simple terms and deep detail with easy examples and analogies. Provide clean, readable text without markdown formatting.
 
-Based on the URL you provided (${content}), please copy the content you want explained and I'll provide a simplified explanation with easy examples and analogies.
-
-For now, I'll provide general guidance about the type of content this URL likely contains:
+Use natural paragraphs and conversational language. Make complex concepts accessible to everyone through real-world comparisons.
 
 Format your response as:
-TITLE: Content Processing Guidance
+TITLE: [A clear, descriptive title for the content]
 
 EXPLANATION:
-I cannot directly access URLs or browse the internet. To help you understand content from ${content}, please copy and paste the text, title, description, or transcript you want me to explain. Once you provide the actual content, I can break it down into simple terms with real-world examples and analogies that make it easy to understand.`;
+[Your simplified explanation of the content from the URL]`;
   } else {
     // Handle different content types
     let contentDescription = "content";
@@ -65,12 +61,24 @@ EXPLANATION:
   }
 
   try {
-    const response = await anthropic.messages.create({
+    const messageConfig: any = {
       // "claude-sonnet-4-20250514"
       model: DEFAULT_MODEL_STR,
       max_tokens: 3000,
       messages: [{ role: 'user', content: prompt }],
-    });
+    };
+
+    // Add web search tool for URLs
+    if (isUrl) {
+      messageConfig.tools = [
+        {
+          type: "web_search",
+          max_uses: 3
+        }
+      ];
+    }
+
+    const response = await anthropic.messages.create(messageConfig);
 
     const fullResponse = response.content[0].type === 'text' ? response.content[0].text : '';
     const titleMatch = fullResponse.match(/TITLE:\s*(.+?)(?:\n|$)/);

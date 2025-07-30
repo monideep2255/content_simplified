@@ -220,7 +220,7 @@ export function MainPage() {
             <div className="space-y-3">
               <Textarea
                 id="content-input"
-                placeholder="Paste text content, article titles, or video transcripts you want to understand better. Note: I cannot process URLs directly - please copy the content from the webpage instead."
+                placeholder="Paste URLs, text content, article titles, or video transcripts you want to understand better. I can now access and explain content from web links!"
                 className="min-h-32 resize-none"
                 value={content}
                 onChange={(e) => {
