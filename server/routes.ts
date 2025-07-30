@@ -51,10 +51,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add followup question (session-based only)
   app.post("/api/followup", async (req, res) => {
     try {
-      const { explanationId, question } = followupQuestionRequestSchema.parse(req.body);
+      const { explanationId, question, originalContent } = followupQuestionRequestSchema.parse(req.body);
       
-      // Generate answer for follow-up question
-      const answer = await answerFollowupQuestion("", question);
+      // Generate answer for follow-up question with context
+      const answer = await answerFollowupQuestion(originalContent || "", question);
       
       const followup = {
         id: `followup-${Date.now()}`,

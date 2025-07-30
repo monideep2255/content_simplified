@@ -5,11 +5,14 @@ export const simplifyContentSchema = z.object({
   content: z.string().min(1, "Content is required"),
   category: z.enum(["ai", "money", "tech", "business", "other"]),
   sourceUrl: z.string().optional(),
+  contentType: z.string().optional(),
+  fileName: z.string().optional(),
 });
 
 export const followupQuestionRequestSchema = z.object({
   explanationId: z.string(),
   question: z.string().min(1, "Question is required"),
+  originalContent: z.string().optional(),
 });
 
 export type SimplifyContentRequest = z.infer<typeof simplifyContentSchema>;

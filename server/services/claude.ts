@@ -72,7 +72,7 @@ EXPLANATION:
     if (isUrl) {
       messageConfig.tools = [
         {
-          type: "web_search",
+          type: "web_search_20250305",
           max_uses: 3
         }
       ];
@@ -80,12 +80,36 @@ EXPLANATION:
 
     const response = await anthropic.messages.create(messageConfig);
 
-    const fullResponse = response.content[0].type === 'text' ? response.content[0].text : '';
+    let fullResponse = '';
+    let citations = '';
+    
+    // Handle response with potential citations from web search
+    if (response.content && response.content.length > 0) {
+      for (const content of response.content) {
+        if (content.type === 'text') {
+          fullResponse += content.text + '\n';
+        }
+      }
+      
+      // Extract citations if web search was used  
+      if (isUrl && response.usage) {
+        citations = '\n\n**Sources:** Information retrieved from web search';
+        if (originalUrl) {
+          citations += `\n• Original URL: ${originalUrl}`;
+        }
+      }
+    }
+
     const titleMatch = fullResponse.match(/TITLE:\s*(.+?)(?:\n|$)/);
     const explanationMatch = fullResponse.match(/EXPLANATION:\s*([\s\S]+)/);
 
     const title = titleMatch ? titleMatch[1].trim() : 'Simplified Explanation';
-    const simplified = explanationMatch ? explanationMatch[1].trim() : fullResponse;
+    let simplified = explanationMatch ? explanationMatch[1].trim() : fullResponse;
+    
+    // Add citations to the explanation
+    if (citations) {
+      simplified += citations;
+    }
 
     return {
       title,
