@@ -162,14 +162,14 @@ export default function HistoryPage() {
               </div>
               <div className="min-w-[180px]">
                 <Select
-                  value={searchFilters.category}
-                  onValueChange={(value) => setSearchFilters(prev => ({ ...prev, category: value }))}
+                  value={searchFilters.category || "all"}
+                  onValueChange={(value) => setSearchFilters(prev => ({ ...prev, category: value === "all" ? "" : value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Categories</SelectItem>
+                    <SelectItem value="all">All Categories</SelectItem>
                     <SelectItem value="ai">AI</SelectItem>
                     <SelectItem value="money">Money</SelectItem>
                     <SelectItem value="tech">Tech</SelectItem>

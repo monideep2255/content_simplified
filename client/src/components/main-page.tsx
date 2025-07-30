@@ -331,24 +331,38 @@ export function MainPage() {
             </div>
           </div>
 
-          <Button 
-            onClick={handleSimplify}
-            disabled={isSimplifying || !content.trim()}
-            className="w-full bg-blue-500 hover:bg-blue-600"
-            size="lg"
-          >
-            {isSimplifying ? (
-              <>
-                <Loader2 className="animate-spin mr-2" size={16} />
-                Processing content...
-              </>
-            ) : (
-              <>
-                <Wand2 className="mr-2" size={16} />
-                Simplify Content
-              </>
-            )}
-          </Button>
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="save-to-history"
+                checked={saveToHistory}
+                onChange={(e) => setSaveToHistory(e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="save-to-history" className="text-sm text-gray-700">
+                Save to history for future reference
+              </label>
+            </div>
+            <Button 
+              onClick={handleSimplify}
+              disabled={isSimplifying || !content.trim()}
+              className="w-full bg-blue-500 hover:bg-blue-600"
+              size="lg"
+            >
+              {isSimplifying ? (
+                <>
+                  <Loader2 className="animate-spin mr-2" size={16} />
+                  Processing content...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="mr-2" size={16} />
+                  Simplify Content
+                </>
+              )}
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
