@@ -139,6 +139,9 @@ EXPLANATION:
     };
   } catch (error) {
     console.error('Claude API error:', error);
+    if (error instanceof Error && error.message.includes('rate_limit_error')) {
+      throw new Error('Rate limit reached. Please wait a moment and try again.');
+    }
     throw new Error('Failed to process content. Please try again.');
   }
 }
@@ -166,6 +169,9 @@ IMPORTANT: Use simple language and examples. Provide clean, readable text withou
     return response.content[0].type === 'text' ? response.content[0].text : 'Unable to process response';
   } catch (error) {
     console.error('Claude API error:', error);
+    if (error instanceof Error && error.message.includes('rate_limit_error')) {
+      throw new Error('Rate limit reached. Please wait a moment and try again.');
+    }
     throw new Error('Failed to answer follow-up question. Please try again.');
   }
 }

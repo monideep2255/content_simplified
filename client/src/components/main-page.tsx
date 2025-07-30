@@ -163,9 +163,12 @@ export function MainPage() {
           }
         }, 500);
       } else {
+        const errorMessage = result.message || "Failed to process follow-up question";
         toast({
-          title: "Error",
-          description: result.message || "Failed to process follow-up question",
+          title: errorMessage.includes("Rate limit") ? "Rate Limit Reached" : "Error",
+          description: errorMessage.includes("Rate limit") 
+            ? "Too many requests. Please wait a moment and try again."
+            : errorMessage,
           variant: "destructive",
         });
       }
