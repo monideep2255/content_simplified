@@ -26,6 +26,7 @@ export function MainPage() {
   const [savedExplanation, setSavedExplanation] = useState<string | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [contentType, setContentType] = useState<string>("");
+  const [isLoadingFollowup, setIsLoadingFollowup] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -131,6 +132,7 @@ export function MainPage() {
 
     const question = followupQuestion.trim();
     setFollowupQuestion("");
+    setIsLoadingFollowup(true);
 
     try {
       // Call the API directly to get the answer
@@ -173,6 +175,8 @@ export function MainPage() {
         description: "Failed to process follow-up question",
         variant: "destructive",
       });
+    } finally {
+      setIsLoadingFollowup(false);
     }
   };
 
@@ -398,23 +402,24 @@ export function MainPage() {
               
               <div className="flex gap-3 mb-6">
                 <Input
-                  placeholder="Ask anything about this explanation..."
+                  placeholder={isLoadingFollowup ? "Processing your question..." : "Ask anything about this explanation..."}
                   value={followupQuestion}
                   onChange={(e) => setFollowupQuestion(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.key === 'Enter' && !e.shiftKey && !isLoadingFollowup) {
                       e.preventDefault();
                       handleFollowup();
                     }
                   }}
                   className="flex-1"
+                  disabled={isLoadingFollowup}
                 />
                 <Button 
                   onClick={handleFollowup}
-                  disabled={isAddingFollowup || !followupQuestion.trim()}
+                  disabled={isLoadingFollowup || !followupQuestion.trim()}
                   className="bg-indigo-500 hover:bg-indigo-600"
                 >
-                  {isAddingFollowup ? (
+                  {isLoadingFollowup ? (
                     <Loader2 className="animate-spin" size={16} />
                   ) : (
                     <>
