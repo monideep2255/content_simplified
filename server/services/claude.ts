@@ -18,16 +18,27 @@ const anthropic = new Anthropic({
 
 export async function extractAndSimplifyContent(content: string, contentType?: string): Promise<{ title: string; simplified: string; isUrl: boolean; originalUrl?: string }> {
   const isUrl = /^https?:\/\/.+/.test(content.trim());
+  const isYouTube = isUrl && (content.includes('youtube.com') || content.includes('youtu.be'));
   
   let prompt: string;
   let originalUrl: string | undefined;
 
-  if (isUrl) {
+  if (isYouTube) {
+    // Handle YouTube videos specially - Claude cannot access video content directly
+    return {
+      title: "YouTube Video Processing Not Available",
+      simplified: "I cannot directly access YouTube video content or transcripts. To get this content explained, please:\n\n1. Copy the video transcript if available (click the three dots below the video, then 'Show transcript')\n2. Copy key points or descriptions from the video\n3. Paste that text content here instead of the URL\n\nThis limitation exists because I cannot process video content directly, only text-based content from web pages.",
+      isUrl: true,
+      originalUrl: content.trim()
+    };
+  } else if (isUrl) {
     originalUrl = content.trim();
     // Use Claude's web search capability to fetch and explain URL content
     prompt = `Please search the web and access the content from this URL: ${content}
 
-Then explain the content in simple terms and deep detail with easy examples and analogies. Provide clean, readable text without markdown formatting.
+Then explain the content in simple terms and deep detail with easy examples and analogies. 
+
+IMPORTANT: Provide clean, readable text without any markdown formatting. Do not use **bold**, *italics*, # headers, - bullet points, or any other markdown syntax. Use plain text with natural paragraphs only.
 
 Use natural paragraphs and conversational language. Make complex concepts accessible to everyone through real-world comparisons.
 
@@ -35,7 +46,7 @@ Format your response as:
 TITLE: [A clear, descriptive title for the content]
 
 EXPLANATION:
-[Your simplified explanation of the content from the URL]`;
+[Your simplified explanation of the content from the URL using plain text only]`;
   } else {
     // Handle different content types
     let contentDescription = "content";
@@ -46,18 +57,26 @@ EXPLANATION:
       else if (contentType.includes('text')) contentDescription = "text content";
     }
 
-    prompt = `Explain the following ${contentDescription} in simple terms and deep detail with easy examples and analogies. Provide clean, readable text without markdown formatting.
+    // Truncate very long content to prevent token limit errors
+    const maxContentLength = 150000; // Conservative limit to avoid 200k token limit
+    const truncatedContent = content.length > maxContentLength ? 
+      content.substring(0, maxContentLength) + "\n\n[Content truncated due to length - showing first portion]" : 
+      content;
+
+    prompt = `Explain the following ${contentDescription} in simple terms and deep detail with easy examples and analogies. 
+
+IMPORTANT: Provide clean, readable text without any markdown formatting. Do not use **bold**, *italics*, # headers, - bullet points, or any other markdown syntax. Use plain text with natural paragraphs only.
 
 Use natural paragraphs and conversational language. Make complex concepts accessible to everyone through real-world comparisons.
 
 Content to explain:
-${content}
+${truncatedContent}
 
 Format your response as:
 TITLE: [A clear, descriptive title for the content]
 
 EXPLANATION:
-[Your simplified explanation here]`;
+[Your simplified explanation here using plain text only]`;
   }
 
   try {
@@ -68,8 +87,8 @@ EXPLANATION:
       messages: [{ role: 'user', content: prompt }],
     };
 
-    // Add web search tool for URLs
-    if (isUrl) {
+    // Add web search tool for URLs (but not YouTube)
+    if (isUrl && !isYouTube) {
       messageConfig.tools = [
         {
           type: "web_search_20250305",
@@ -93,10 +112,10 @@ EXPLANATION:
       }
       
       // Extract citations if web search was used  
-      if (isUrl && response.usage) {
-        citations = '\n\n**Sources:** Information retrieved from web search';
+      if (isUrl && !isYouTube && response.usage) {
+        citations = '\n\nSources: Information retrieved from web search';
         if (originalUrl) {
-          citations += `\n• Original URL: ${originalUrl}`;
+          citations += `\nOriginal URL: ${originalUrl}`;
         }
       }
     }
@@ -134,7 +153,7 @@ ${originalExplanation}
 
 Answer this follow-up question: ${question}
 
-Use simple language and examples. Provide clean, readable text without markdown formatting. Be conversational and helpful.`;
+IMPORTANT: Use simple language and examples. Provide clean, readable text without any markdown formatting. Do not use **bold**, *italics*, # headers, - bullet points, or any other markdown syntax. Use plain text with natural paragraphs only. Be conversational and helpful.`;
 
   try {
     const response = await anthropic.messages.create({
