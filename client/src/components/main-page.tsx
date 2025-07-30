@@ -6,7 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Loader2, Wand2, MessageCircle, Upload, FileText } from "lucide-react";
+import { Copy, Loader2, Wand2, MessageCircle, Upload, FileText, Brain, History, Save, Bookmark } from "lucide-react";
+import { Link } from "wouter";
 import { useContentSimplifier } from "@/hooks/use-content-simplifier";
 import { useToast } from "@/hooks/use-toast";
 import type { ExplanationWithFollowups } from "@shared/schema";
@@ -27,6 +28,7 @@ export function MainPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [contentType, setContentType] = useState<string>("");
   const [isLoadingFollowup, setIsLoadingFollowup] = useState(false);
+  const [saveToHistory, setSaveToHistory] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -110,6 +112,7 @@ export function MainPage() {
       category,
       contentType: contentType || undefined,
       fileName: uploadedFile?.name || undefined,
+      saveToHistory: saveToHistory,
     };
 
     simplifyContent(requestData);
@@ -218,16 +221,23 @@ export function MainPage() {
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header Section */}
       <div className="text-center mb-12">
-        <div className="flex items-center justify-center mb-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex-1"></div>
           <button 
             onClick={resetToHome}
             className="text-3xl font-bold text-gray-900 hover:text-indigo-600 transition-colors cursor-pointer flex items-center space-x-2"
           >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-            </svg>
+            <Brain className="w-8 h-8" />
             <span>Content Simplifier</span>
           </button>
+          <div className="flex-1 flex justify-end">
+            <Link href="/history">
+              <Button variant="outline" className="flex items-center gap-2">
+                <History className="w-4 h-4" />
+                History
+              </Button>
+            </Link>
+          </div>
           {explanation && (
             <button
               onClick={resetToHome}

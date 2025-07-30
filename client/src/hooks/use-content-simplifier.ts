@@ -9,7 +9,8 @@ import type { SimplifyContentRequest, FollowupQuestionRequest } from "@shared/sc
 
 type ExtendedSimplifyRequest = SimplifyContentRequest & { 
   contentType?: string; 
-  fileName?: string; 
+  fileName?: string;
+  saveToHistory: boolean;
 };
 
 export function useContentSimplifier() {
