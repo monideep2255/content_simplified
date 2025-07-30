@@ -84,6 +84,20 @@ Preferred communication style: Simple, everyday language.
 - **PostgreSQL**: Database schema defined but application runs without persistent storage
 - **Neon Database**: Connection configured via environment variables
 
+## Recent Changes: Latest modifications with dates
+
+### July 30, 2025
+- **URL Processing with Web Search**: Implemented Claude's web search API for direct URL content retrieval
+- **YouTube Detection**: Added special handling for YouTube URLs with user guidance for transcript processing
+- **Follow-up Context Retention**: Fixed follow-up questions to include original explanation context
+- **Clear/Reset Functionality**: Added clickable logo and "Clear & Start Over" button
+- **Source Citations**: Automatic citation display for web-searched content
+- **Plain Text Output**: Removed markdown formatting from all AI responses
+- **PDF Error Handling**: Added content truncation (150k chars) to prevent token limit errors
+- **Loading Indicators**: Comprehensive loading states for follow-up questions
+- **Rate Limit Handling**: User-friendly error messages for API rate limits
+- **Content Type Detection**: Enhanced file upload with proper MIME type handling
+
 ## Deployment Strategy
 
 ### Build Process
