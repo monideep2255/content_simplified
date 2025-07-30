@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, BookmarkIcon, Trash2, Copy, Calendar, Brain, Eye } from "lucide-react";
+import { Search, BookmarkIcon, Trash2, Copy, Calendar, Brain, Eye, Download, FileText, FileImage } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   getAllExplanations, 
@@ -18,6 +18,8 @@ import type { ExplanationWithFollowups } from "@shared/schema";
 import { format } from "date-fns";
 import { Link } from "wouter";
 import ExplanationModal from "@/components/explanation-modal";
+import { exportExplanation, exportMultipleExplanations, type ExportFormat } from "@/lib/export-utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const categoryColors = {
   ai: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
@@ -120,6 +122,49 @@ export default function HistoryPage() {
     setIsModalOpen(true);
   };
 
+  const handleExportSingle = async (explanation: ExplanationWithFollowups, format: ExportFormat) => {
+    try {
+      await exportExplanation(explanation, format);
+      toast({
+        title: "Export Successful",
+        description: `Explanation exported as ${format.toUpperCase()} file.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export explanation. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportAll = async (format: ExportFormat) => {
+    const explanationsToExport = activeTab === "bookmarked" ? bookmarkedExplanations : displayExplanations;
+    
+    if (explanationsToExport.length === 0) {
+      toast({
+        title: "Nothing to Export",
+        description: "No explanations available to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await exportMultipleExplanations(explanationsToExport, format);
+      toast({
+        title: "Export Successful",
+        description: `${explanationsToExport.length} explanations exported as ${format.toUpperCase()} file.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export explanations. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const allExplanations = allExplanationsData?.explanations || [];
   const bookmarkedExplanations = allExplanations.filter(e => e.isBookmarked);
   const searchResults = searchMutation.data?.explanations || [];
@@ -197,12 +242,36 @@ export default function HistoryPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button 
-                onClick={handleSearch}
-                disabled={searchMutation.isPending}
-              >
-                {searchMutation.isPending ? "Searching..." : "Search"}
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleSearch}
+                  disabled={searchMutation.isPending}
+                >
+                  {searchMutation.isPending ? "Searching..." : "Search"}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      <Download className="w-4 h-4 mr-2" />
+                      Export All
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => handleExportAll('pdf')}>
+                      <FileImage className="w-4 h-4 mr-2" />
+                      Export as PDF
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExportAll('docx')}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Export as Word
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExportAll('txt')}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Export as Text
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </CardContent>
         </Card>

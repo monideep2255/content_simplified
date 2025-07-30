@@ -3,12 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Copy, BookmarkIcon, MessageCircle, Send, Loader2 } from "lucide-react";
+import { Copy, BookmarkIcon, MessageCircle, Send, Loader2, Download, FileText, FileImage } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toggleBookmark, addFollowupQuestion } from "@/lib/api";
 import type { ExplanationWithFollowups } from "@shared/schema";
 import { format } from "date-fns";
+import { exportExplanation, type ExportFormat } from "@/lib/export-utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const categoryColors = {
   ai: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
@@ -106,6 +108,24 @@ export default function ExplanationModal({ explanation, isOpen, onClose }: Expla
     });
   };
 
+  const handleExport = async (format: ExportFormat) => {
+    if (!explanation) return;
+    
+    try {
+      await exportExplanation(explanation, format);
+      toast({
+        title: "Export Successful",
+        description: `Explanation exported as ${format.toUpperCase()} file.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export explanation. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!explanation) return null;
 
   return (
@@ -120,11 +140,33 @@ export default function ExplanationModal({ explanation, isOpen, onClose }: Expla
               </Badge>
             </div>
             <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" title="Export">
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                    <FileImage className="w-4 h-4 mr-2" />
+                    Export as PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('docx')}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Export as Word
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleExport('txt')}>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Export as Text
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => bookmarkMutation.mutate(explanation.id)}
                 disabled={bookmarkMutation.isPending}
+                title="Toggle Bookmark"
               >
                 <BookmarkIcon 
                   className={`w-4 h-4 ${explanation.isBookmarked ? 'fill-current text-yellow-500' : 'text-gray-400'}`} 
@@ -134,6 +176,7 @@ export default function ExplanationModal({ explanation, isOpen, onClose }: Expla
                 variant="ghost"
                 size="sm"
                 onClick={handleCopy}
+                title="Copy to Clipboard"
               >
                 <Copy className="w-4 h-4" />
               </Button>
