@@ -97,6 +97,11 @@ Preferred communication style: Simple, everyday language.
 - **Loading Indicators**: Comprehensive loading states for follow-up questions
 - **Rate Limit Handling**: User-friendly error messages for API rate limits
 - **Content Type Detection**: Enhanced file upload with proper MIME type handling
+- **Export Options Complete**: Comprehensive export functionality with PDF, Word, and text formats
+- **Multi-LLM Backup System**: Added DeepSeek API as backup when Claude reaches rate limits
+- **Export from Main Page**: Download dropdown available on all explanations (saved or not)
+- **Bulk Export Feature**: "Export All" functionality in history page
+- **Save/Bookmark Guidance**: Clear instructions for users on how to save and bookmark content
 
 ## Deployment Strategy
 

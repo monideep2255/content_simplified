@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { simplifyContentWithDeepSeek, processFollowupWithDeepSeek } from './deepseek.js';
 
 /*
 <important_code_snippet_instructions>
@@ -139,9 +140,26 @@ EXPLANATION:
     };
   } catch (error) {
     console.error('Claude API error:', error);
+    
     if (error instanceof Error && error.message.includes('rate_limit_error')) {
-      throw new Error('Rate limit reached. Please wait a moment and try again.');
+      console.log('Claude rate limited, trying DeepSeek as backup...');
+      try {
+        const deepseekResult = await simplifyContentWithDeepSeek(
+          isUrl ? `URL: ${content}` : content, 
+          'other'
+        );
+        return {
+          title: deepseekResult.title,
+          simplified: deepseekResult.simplifiedContent,
+          isUrl,
+          originalUrl
+        };
+      } catch (deepseekError) {
+        console.error('DeepSeek backup failed:', deepseekError);
+        throw new Error('Rate limit reached and backup service unavailable. Please wait a moment and try again.');
+      }
     }
+    
     throw new Error('Failed to process content. Please try again.');
   }
 }
@@ -169,9 +187,17 @@ IMPORTANT: Use simple language and examples. Provide clean, readable text withou
     return response.content[0].type === 'text' ? response.content[0].text : 'Unable to process response';
   } catch (error) {
     console.error('Claude API error:', error);
+    
     if (error instanceof Error && error.message.includes('rate_limit_error')) {
-      throw new Error('Rate limit reached. Please wait a moment and try again.');
+      console.log('Claude rate limited for followup, trying DeepSeek as backup...');
+      try {
+        return await processFollowupWithDeepSeek(question, originalExplanation);
+      } catch (deepseekError) {
+        console.error('DeepSeek backup failed for followup:', deepseekError);
+        throw new Error('Rate limit reached and backup service unavailable. Please wait a moment and try again.');
+      }
     }
+    
     throw new Error('Failed to answer follow-up question. Please try again.');
   }
 }
