@@ -57,25 +57,9 @@ const exportToPDF = async (explanation: ExplanationWithFollowups, fileName: stri
 
   // Add title
   addText(explanation.title, 18, true);
-  yPosition += 5;
+  yPosition += 15;
 
-  // Add metadata
-  addText(`Category: ${explanation.category.toUpperCase()}`, 10);
-  addText(`Created: ${format(new Date(explanation.createdAt), 'MMM d, yyyy HH:mm')}`, 10);
-  
-  if (explanation.sourceUrl) {
-    addText(`Source: ${explanation.sourceUrl}`, 10);
-  }
-  
-  yPosition += 10;
-
-  // Add original content
-  addText('Original Content:', 14, true);
-  addText(explanation.originalContent);
-  yPosition += 10;
-
-  // Add simplified explanation
-  addText('Simplified Explanation:', 14, true);
+  // Add only the simplified explanation
   addText(explanation.simplifiedContent);
 
   // Add follow-up questions if any
@@ -104,25 +88,8 @@ const exportToDocx = async (explanation: ExplanationWithFollowups, fileName: str
     })
   );
 
-  // Metadata
-  children.push(
-    new Paragraph({
-      children: [
-        new TextRun({ text: `Category: ${explanation.category.toUpperCase()}`, break: 1 }),
-        new TextRun({ text: `Created: ${format(new Date(explanation.createdAt), 'MMM d, yyyy HH:mm')}`, break: 1 }),
-      ],
-    })
-  );
-
-  if (explanation.sourceUrl) {
-    children.push(
-      new Paragraph({
-        children: [new TextRun({ text: `Source: ${explanation.sourceUrl}`, break: 1 })],
-      })
-    );
-  }
-
-  // Original Content
+  // Add spacing
+  children.push(new Paragraph({ children: [new TextRun({ text: "" })] }));
   children.push(
     new Paragraph({
       children: [new TextRun({ text: 'Original Content:', bold: true, size: 24 })],
@@ -191,21 +158,7 @@ const exportToText = (explanation: ExplanationWithFollowups, fileName: string): 
   let content = `${explanation.title}\n`;
   content += '='.repeat(explanation.title.length) + '\n\n';
   
-  content += `Category: ${explanation.category.toUpperCase()}\n`;
-  content += `Created: ${format(new Date(explanation.createdAt), 'MMM d, yyyy HH:mm')}\n`;
-  
-  if (explanation.sourceUrl) {
-    content += `Source: ${explanation.sourceUrl}\n`;
-  }
-  
-  content += '\n';
-  
-  content += 'Original Content:\n';
-  content += '-'.repeat(16) + '\n';
-  content += explanation.originalContent + '\n\n';
-  
-  content += 'Simplified Explanation:\n';
-  content += '-'.repeat(21) + '\n';
+  // Add only the simplified explanation
   content += explanation.simplifiedContent + '\n\n';
   
   if (explanation.followups.length > 0) {

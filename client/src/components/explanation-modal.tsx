@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Copy, BookmarkIcon, MessageCircle, Send, Loader2, Download, FileText, FileImage } from "lucide-react";
+import { Copy, BookmarkIcon, MessageCircle, Send, Loader2, Download, FileText, FileImage, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toggleBookmark, addFollowupQuestion } from "@/lib/api";
@@ -130,7 +130,7 @@ export default function ExplanationModal({ explanation, isOpen, onClose }: Expla
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="explanation-content">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -179,6 +179,14 @@ export default function ExplanationModal({ explanation, isOpen, onClose }: Expla
                 title="Copy to Clipboard"
               >
                 <Copy className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                title="Close"
+              >
+                <X className="w-4 h-4" />
               </Button>
             </div>
           </DialogTitle>
