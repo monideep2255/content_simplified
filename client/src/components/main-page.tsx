@@ -6,11 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Loader2, Wand2, MessageCircle, Upload, FileText, Brain, History, Save, Bookmark } from "lucide-react";
+import { Copy, Loader2, Wand2, MessageCircle, Upload, FileText, Brain, History, Save, Bookmark, Download, FileImage } from "lucide-react";
 import { Link } from "wouter";
 import { useContentSimplifier } from "@/hooks/use-content-simplifier";
 import { useToast } from "@/hooks/use-toast";
 import type { ExplanationWithFollowups } from "@shared/schema";
+import { exportExplanation, type ExportFormat } from "@/lib/export-utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const categories = [
   { value: "ai", label: "🤖 AI", color: "bg-purple-500" },
@@ -217,6 +219,24 @@ export function MainPage() {
     setUploadedFile(null);
   };
 
+  const handleExport = async (format: ExportFormat) => {
+    if (!explanation) return;
+    
+    try {
+      await exportExplanation(explanation, format);
+      toast({
+        title: "Export Successful",
+        description: `Explanation exported as ${format.toUpperCase()} file.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export explanation. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Header Section */}
@@ -332,17 +352,28 @@ export function MainPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="save-to-history"
-                checked={saveToHistory}
-                onChange={(e) => setSaveToHistory(e.target.checked)}
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="save-to-history" className="text-sm text-gray-700">
-                Save to history for future reference
-              </label>
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="save-to-history"
+                  checked={saveToHistory}
+                  onChange={(e) => setSaveToHistory(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                />
+                <label htmlFor="save-to-history" className="text-sm text-gray-700">
+                  Save to history for future reference
+                </label>
+              </div>
+              <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-600">
+                <p><strong>How to Save & Bookmark:</strong></p>
+                <ul className="mt-1 space-y-1 text-xs">
+                  <li>• Check "Save to history" before generating explanation</li>
+                  <li>• Saved explanations appear in History page</li>
+                  <li>• Use the bookmark star on saved explanations for quick access</li>
+                  <li>• Export any explanation (saved or not) using the download button</li>
+                </ul>
+              </div>
             </div>
             <Button 
               onClick={handleSimplify}
@@ -401,14 +432,50 @@ export function MainPage() {
               </div>
               
               <div className="flex space-x-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <Download size={16} />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                      <FileImage className="w-4 h-4 mr-2" />
+                      Export as PDF
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExport('docx')}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Export as Word
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleExport('txt')}>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Export as Text
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleCopy}
                   className="text-gray-500 hover:text-gray-700"
+                  title="Copy to Clipboard"
                 >
                   <Copy size={16} />
                 </Button>
+                {saveToHistory && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-500 hover:text-gray-700"
+                    title="Saved to History"
+                  >
+                    <Save size={16} />
+                  </Button>
+                )}
               </div>
             </div>
 
