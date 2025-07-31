@@ -223,7 +223,14 @@ export default function HistoryPage() {
   const searchResults = searchMutation.data?.explanations || [];
 
   const getDisplayExplanations = () => {
-    if (searchMutation.isSuccess && (searchFilters.query || searchFilters.category || searchFilters.bookmarkedOnly)) {
+    if (searchMutation.isSuccess && (
+      searchFilters.query || 
+      searchFilters.category || 
+      searchFilters.bookmarkedOnly ||
+      searchFilters.dateFrom ||
+      searchFilters.dateTo ||
+      searchFilters.contentType
+    )) {
       return searchResults;
     }
     
@@ -352,14 +359,14 @@ export default function HistoryPage() {
                       Content Type
                     </label>
                     <Select
-                      value={searchFilters.contentType}
-                      onValueChange={(value) => setSearchFilters(prev => ({ ...prev, contentType: value }))}
+                      value={searchFilters.contentType || "all"}
+                      onValueChange={(value) => setSearchFilters(prev => ({ ...prev, contentType: value === "all" ? "" : value }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="All Types" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Types</SelectItem>
+                        <SelectItem value="all">All Types</SelectItem>
                         <SelectItem value="url">URLs</SelectItem>
                         <SelectItem value="text">Text Input</SelectItem>
                         <SelectItem value="file">File Uploads</SelectItem>
