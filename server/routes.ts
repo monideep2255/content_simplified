@@ -121,8 +121,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Search explanations
   app.post("/api/explanations/search", async (req, res) => {
     try {
-      const { query, category, bookmarkedOnly } = searchExplanationsSchema.parse(req.body);
-      const explanations = await storage.searchExplanations(query, category, bookmarkedOnly);
+      const searchData = searchExplanationsSchema.parse(req.body);
+      
+      // Convert date strings to Date objects if provided
+      const filters = {
+        ...searchData,
+        dateFrom: searchData.dateFrom ? new Date(searchData.dateFrom) : undefined,
+        dateTo: searchData.dateTo ? new Date(searchData.dateTo) : undefined,
+      };
+      
+      const explanations = await storage.searchExplanations(filters);
+      
       res.json({ success: true, explanations });
     } catch (error) {
       console.error('Search explanations error:', error);

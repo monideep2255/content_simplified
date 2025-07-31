@@ -47,8 +47,22 @@ export async function getAllExplanations(): Promise<ExplanationsResponse> {
   return await res.json();
 }
 
-export async function searchExplanations(data: { query?: string; category?: string; bookmarkedOnly?: boolean }): Promise<ExplanationsResponse> {
-  const res = await apiRequest("POST", "/api/explanations/search", data);
+export async function searchExplanations(data: { 
+  query?: string; 
+  category?: string; 
+  bookmarkedOnly?: boolean;
+  dateFrom?: Date;
+  dateTo?: Date;
+  contentType?: string;
+}): Promise<ExplanationsResponse> {
+  // Convert dates to ISO strings for API
+  const searchParams = {
+    ...data,
+    dateFrom: data.dateFrom?.toISOString(),
+    dateTo: data.dateTo?.toISOString(),
+  };
+
+  const res = await apiRequest("POST", "/api/explanations/search", searchParams);
   return await res.json();
 }
 

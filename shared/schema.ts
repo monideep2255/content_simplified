@@ -46,6 +46,9 @@ export const searchExplanationsSchema = z.object({
   query: z.string().optional(),
   category: z.enum(["ai", "money", "tech", "business", "other"]).optional(),
   bookmarkedOnly: z.boolean().default(false),
+  dateFrom: z.string().datetime().optional(),
+  dateTo: z.string().datetime().optional(),
+  contentType: z.enum(['url', 'text', 'file']).optional(),
 });
 
 // Insert Schemas
@@ -63,11 +66,6 @@ export type Explanation = typeof explanations.$inferSelect;
 export type Followup = typeof followups.$inferSelect;
 export type InsertExplanation = z.infer<typeof insertExplanationSchema>;
 export type InsertFollowup = z.infer<typeof insertFollowupSchema>;
-
-// Legacy type for backward compatibility
-export type ExplanationWithFollowups = Explanation & {
-  followups: Followup[];
-};
 
 export type SimplifyContentRequest = z.infer<typeof simplifyContentSchema>;
 export type FollowupQuestionRequest = z.infer<typeof followupQuestionRequestSchema>;

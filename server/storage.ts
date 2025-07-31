@@ -1,13 +1,20 @@
 import { explanations, followups, type Explanation, type Followup, type InsertExplanation, type InsertFollowup, type ExplanationWithFollowups } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, ilike, or } from "drizzle-orm";
+import { eq, desc, and, ilike, or, gte, lte } from "drizzle-orm";
 
 export interface IStorage {
   // Explanation methods
   createExplanation(explanation: InsertExplanation): Promise<Explanation>;
   getExplanation(id: number): Promise<ExplanationWithFollowups | undefined>;
   getAllExplanations(): Promise<ExplanationWithFollowups[]>;
-  searchExplanations(query?: string, category?: string, bookmarkedOnly?: boolean): Promise<ExplanationWithFollowups[]>;
+  searchExplanations(filters: {
+    query?: string;
+    category?: string;
+    bookmarkedOnly?: boolean;
+    dateFrom?: Date;
+    dateTo?: Date;
+    contentType?: string;
+  }): Promise<ExplanationWithFollowups[]>;
   toggleBookmark(id: number): Promise<Explanation>;
   deleteExplanation(id: number): Promise<void>;
   
@@ -69,25 +76,70 @@ export class DatabaseStorage implements IStorage {
     return result;
   }
 
-  async searchExplanations(query?: string, category?: string, bookmarkedOnly?: boolean): Promise<ExplanationWithFollowups[]> {
+  async searchExplanations(filters: {
+    query?: string;
+    category?: string;
+    bookmarkedOnly?: boolean;
+    dateFrom?: Date;
+    dateTo?: Date;
+    contentType?: string;
+  }): Promise<ExplanationWithFollowups[]> {
     let whereConditions = [];
 
-    if (query) {
+    if (filters.query) {
       whereConditions.push(
         or(
-          ilike(explanations.title, `%${query}%`),
-          ilike(explanations.originalContent, `%${query}%`),
-          ilike(explanations.simplifiedContent, `%${query}%`)
+          ilike(explanations.title, `%${filters.query}%`),
+          ilike(explanations.simplifiedContent, `%${filters.query}%`),
+          ilike(explanations.originalContent, `%${filters.query}%`)
         )
       );
     }
 
-    if (category) {
-      whereConditions.push(eq(explanations.category, category as any));
+    if (filters.category) {
+      whereConditions.push(eq(explanations.category, filters.category as any));
     }
 
-    if (bookmarkedOnly) {
+    if (filters.bookmarkedOnly) {
       whereConditions.push(eq(explanations.isBookmarked, true));
+    }
+
+    // Date range filtering
+    if (filters.dateFrom) {
+      whereConditions.push(gte(explanations.createdAt, filters.dateFrom));
+    }
+
+    if (filters.dateTo) {
+      whereConditions.push(lte(explanations.createdAt, filters.dateTo));
+    }
+
+    // Content type filtering based on sourceUrl presence
+    if (filters.contentType) {
+      switch (filters.contentType) {
+        case 'url':
+          whereConditions.push(and(
+            explanations.sourceUrl !== null,
+            ilike(explanations.sourceUrl, 'http%')
+          ));
+          break;
+        case 'text':
+          whereConditions.push(
+            or(
+              explanations.sourceUrl === null,
+              explanations.sourceUrl === ''
+            )
+          );
+          break;
+        case 'file':
+          // Files might have specific patterns or no sourceUrl but have originalContent
+          whereConditions.push(
+            or(
+              explanations.sourceUrl === null,
+              explanations.sourceUrl === ''
+            )
+          );
+          break;
+      }
     }
 
     const searchResults = await db

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, BookmarkIcon, Trash2, Copy, Calendar, Brain, Eye, Download, FileText, FileImage } from "lucide-react";
+import { Search, BookmarkIcon, Trash2, Copy, Calendar, Brain, Eye, Download, FileText, FileImage, CalendarIcon, Filter } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { 
   getAllExplanations, 
@@ -20,6 +20,9 @@ import { Link } from "wouter";
 import ExplanationModal from "@/components/explanation-modal";
 import { exportExplanation, exportMultipleExplanations, type ExportFormat } from "@/lib/export-utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { addDays, subDays, subWeeks, subMonths, startOfDay, endOfDay } from "date-fns";
 
 const categoryColors = {
   ai: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
@@ -33,6 +36,9 @@ interface SearchFilters {
   query: string;
   category: string;
   bookmarkedOnly: boolean;
+  dateFrom?: Date;
+  dateTo?: Date;
+  contentType?: string; // 'url' | 'text' | 'file'
 }
 
 export default function HistoryPage() {
@@ -41,8 +47,12 @@ export default function HistoryPage() {
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({
     query: "",
     category: "",
-    bookmarkedOnly: false
+    bookmarkedOnly: false,
+    dateFrom: undefined,
+    dateTo: undefined,
+    contentType: ""
   });
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [selectedExplanation, setSelectedExplanation] = useState<ExplanationWithFollowups | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -103,9 +113,52 @@ export default function HistoryPage() {
     const filters = {
       query: searchFilters.query || undefined,
       category: searchFilters.category || undefined,
-      bookmarkedOnly: searchFilters.bookmarkedOnly
+      bookmarkedOnly: searchFilters.bookmarkedOnly,
+      dateFrom: searchFilters.dateFrom,
+      dateTo: searchFilters.dateTo,
+      contentType: searchFilters.contentType || undefined
     };
     searchMutation.mutate(filters);
+  };
+
+  const handleDatePreset = (preset: string) => {
+    const now = new Date();
+    let dateFrom: Date | undefined;
+    let dateTo: Date | undefined = endOfDay(now);
+
+    switch (preset) {
+      case 'today':
+        dateFrom = startOfDay(now);
+        break;
+      case 'week':
+        dateFrom = startOfDay(subWeeks(now, 1));
+        break;
+      case 'month':
+        dateFrom = startOfDay(subMonths(now, 1));
+        break;
+      case 'clear':
+        dateFrom = undefined;
+        dateTo = undefined;
+        break;
+    }
+
+    setSearchFilters(prev => ({
+      ...prev,
+      dateFrom,
+      dateTo
+    }));
+  };
+
+  const clearAllFilters = () => {
+    setSearchFilters({
+      query: "",
+      category: "",
+      bookmarkedOnly: false,
+      dateFrom: undefined,
+      dateTo: undefined,
+      contentType: ""
+    });
+    setActiveTab("all");
   };
 
   const handleCopyExplanation = (explanation: ExplanationWithFollowups) => {
@@ -244,10 +297,26 @@ export default function HistoryPage() {
               </div>
               <div className="flex gap-2">
                 <Button 
+                  variant="outline" 
+                  onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  className="flex items-center gap-2"
+                >
+                  <Filter className="w-4 h-4" />
+                  Filters
+                </Button>
+                <Button 
                   onClick={handleSearch}
                   disabled={searchMutation.isPending}
                 >
                   {searchMutation.isPending ? "Searching..." : "Search"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearAllFilters}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  Clear All
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -273,6 +342,134 @@ export default function HistoryPage() {
                 </DropdownMenu>
               </div>
             </div>
+            {/* Advanced Filters */}
+            {showAdvancedFilters && (
+              <div className="border-t pt-4 mt-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Content Type Filter */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      Content Type
+                    </label>
+                    <Select
+                      value={searchFilters.contentType}
+                      onValueChange={(value) => setSearchFilters(prev => ({ ...prev, contentType: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">All Types</SelectItem>
+                        <SelectItem value="url">URLs</SelectItem>
+                        <SelectItem value="text">Text Input</SelectItem>
+                        <SelectItem value="file">File Uploads</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Date Range Quick Presets */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      Quick Date Filters
+                    </label>
+                    <div className="flex gap-2 flex-wrap">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDatePreset('today')}
+                      >
+                        Today
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDatePreset('week')}
+                      >
+                        This Week
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDatePreset('month')}
+                      >
+                        This Month
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDatePreset('clear')}
+                      >
+                        Clear Dates
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Custom Date Range */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+                      Custom Date Range
+                    </label>
+                    <div className="flex gap-2">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className="justify-start text-left font-normal">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {searchFilters.dateFrom ? format(searchFilters.dateFrom, "MMM dd") : "From"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={searchFilters.dateFrom}
+                            onSelect={(date) => setSearchFilters(prev => ({ ...prev, dateFrom: date }))}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" size="sm" className="justify-start text-left font-normal">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {searchFilters.dateTo ? format(searchFilters.dateTo, "MMM dd") : "To"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <CalendarComponent
+                            mode="single"
+                            selected={searchFilters.dateTo}
+                            onSelect={(date) => setSearchFilters(prev => ({ ...prev, dateTo: date }))}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Active Filters Display */}
+                {(searchFilters.dateFrom || searchFilters.dateTo || searchFilters.contentType) && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
+                    {searchFilters.dateFrom && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        From: {format(searchFilters.dateFrom, "MMM dd, yyyy")}
+                      </Badge>
+                    )}
+                    {searchFilters.dateTo && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        To: {format(searchFilters.dateTo, "MMM dd, yyyy")}
+                      </Badge>
+                    )}
+                    {searchFilters.contentType && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        Type: {searchFilters.contentType.charAt(0).toUpperCase() + searchFilters.contentType.slice(1)}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
