@@ -131,6 +131,52 @@ This guide provides step-by-step test cases for all implemented features in the 
    - View in modal and ask follow-up question
    - ✅ **Expected:** Follow-up works with whichever API is available
 
+### Feature 6: Advanced File Processing ✅
+**Test Steps:**
+1. **Image OCR Processing**
+   - Upload a clear image with readable text (e.g., screenshot of article, photo of document)
+   - Select appropriate category
+   - Click "Simplify Content"
+   - ✅ **Expected:** Text extracted using OCR, then simplified by AI
+   - ✅ **Expected:** Toast shows "Processed using OCR (Tesseract)"
+   - ✅ **Expected:** Results show simplified explanation of extracted text
+
+2. **Image OCR Error Handling**
+   - Upload an image with no text or very blurry text
+   - ✅ **Expected:** Clear error message about no readable text found
+   - ✅ **Expected:** Suggestions for better image quality
+
+3. **Excel/CSV Processing**
+   - Upload an Excel file (.xlsx) with data tables
+   - ✅ **Expected:** File processed with "XLSX Parser" method
+   - ✅ **Expected:** Sample data rows and headers extracted
+   - ✅ **Expected:** AI explains data structure and insights
+
+4. **CSV File Processing**
+   - Upload a CSV file with comma-separated data
+   - ✅ **Expected:** Data extracted and summarized
+   - ✅ **Expected:** Headers and sample rows shown to AI for analysis
+
+5. **File Size Limits**
+   - Try to upload file larger than 10MB
+   - ✅ **Expected:** Clear error message about 10MB limit
+   - ✅ **Expected:** Upload blocked before processing
+
+6. **Enhanced File Upload UI**
+   - Check file upload button text shows "PDF, Text, Images (with OCR), Excel/CSV, Documents"
+   - Verify accept attribute includes new file types (.xlsx, .xls, .csv)
+   - ✅ **Expected:** UI indicates enhanced processing capabilities
+
+7. **Processing Method Display**
+   - Upload different file types (image, Excel, CSV)
+   - ✅ **Expected:** Success toast shows specific processing method used
+   - ✅ **Expected:** Different methods for different file types
+
+8. **Fallback Processing**
+   - Upload regular PDF or text file
+   - ✅ **Expected:** Uses existing processing method (not enhanced endpoint)
+   - ✅ **Expected:** Still works correctly for basic file types
+
 ---
 
 ## 🧪 **CORE FUNCTIONALITY TESTS**
@@ -241,5 +287,25 @@ This guide provides step-by-step test cases for all implemented features in the 
 
 ---
 
+## 🚨 **ERROR TESTING FOR ENHANCED FILE PROCESSING**
+
+### OCR Error Scenarios
+**Test Steps:**
+1. **Upload blurry image**
+   - ✅ **Expected:** "No readable text found in image" error
+2. **Upload image with no text (e.g., landscape photo)**
+   - ✅ **Expected:** Helpful error with suggestions
+3. **Upload corrupted image file**
+   - ✅ **Expected:** Processing error handled gracefully
+
+### Spreadsheet Error Scenarios  
+**Test Steps:**
+1. **Upload empty Excel file**
+   - ✅ **Expected:** "Spreadsheet appears to be empty" error
+2. **Upload corrupted .xlsx file**
+   - ✅ **Expected:** Clear error message about file validity
+
+---
+
 *Last Updated: July 31, 2025*
-*Test Coverage: 5/12 Features (42% Complete)*
+*Test Coverage: 6/12 Features (50% Complete)*

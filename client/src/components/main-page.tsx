@@ -56,23 +56,51 @@ export function MainPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    // Check file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select a file smaller than 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setUploadedFile(file);
     setContentType(file.type);
 
-    try {
-      const fileContent = await readFileContent(file);
-      setContent(fileContent);
-      
+    // For images and spreadsheets, use enhanced processing immediately
+    const enhancedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/tiff',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv'
+    ];
+
+    if (enhancedTypes.includes(file.type) || file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls') || file.name.toLowerCase().endsWith('.csv')) {
+      // Show file uploaded but indicate it needs processing
+      setContent(`[${file.name}] - File ready for enhanced processing (OCR/Data extraction)`);
       toast({
-        title: "File Uploaded",
-        description: `${file.name} has been loaded successfully.`,
+        title: "Enhanced File Uploaded",
+        description: `${file.name} will be processed with ${file.type.startsWith('image/') ? 'OCR for text extraction' : 'data analysis'}.`,
       });
-    } catch (error) {
-      toast({
-        title: "Upload Error",
-        description: "Failed to read file content.",
-        variant: "destructive",
-      });
+    } else {
+      // Basic file reading for text/PDF files
+      try {
+        const fileContent = await readFileContent(file);
+        setContent(fileContent);
+        
+        toast({
+          title: "File Uploaded",
+          description: `${file.name} has been loaded successfully.`,
+        });
+      } catch (error) {
+        toast({
+          title: "Upload Error",
+          description: "Failed to read file content.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -99,8 +127,8 @@ export function MainPage() {
     });
   };
 
-  const handleSimplify = () => {
-    if (!content.trim()) {
+  const handleSimplify = async () => {
+    if (!content.trim() && !uploadedFile) {
       toast({
         title: "Content Required",
         description: "Please enter some content or upload a file to simplify.",
@@ -109,6 +137,53 @@ export function MainPage() {
       return;
     }
 
+    // Check if we need to use enhanced file processing
+    if (uploadedFile) {
+      const enhancedTypes = [
+        'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/bmp', 'image/tiff',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+        'text/csv'
+      ];
+
+      if (enhancedTypes.includes(uploadedFile.type) || 
+          uploadedFile.name.toLowerCase().endsWith('.xlsx') || 
+          uploadedFile.name.toLowerCase().endsWith('.xls') || 
+          uploadedFile.name.toLowerCase().endsWith('.csv')) {
+        
+        // Use enhanced file processing endpoint
+        try {
+          const { uploadAndProcessFile } = await import("@/lib/api");
+          const result = await uploadAndProcessFile(uploadedFile, category, saveToHistory);
+          
+          if (result.success && result.explanation) {
+            setExplanation(result.explanation);
+            
+            // Show processing info
+            if (result.fileInfo) {
+              toast({
+                title: "File Processed Successfully",
+                description: `Processed using ${result.fileInfo.processingMethod}`,
+              });
+            }
+            
+            // Scroll to results
+            setTimeout(() => {
+              resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+          }
+        } catch (error) {
+          toast({
+            title: "Processing Failed",
+            description: error instanceof Error ? error.message : "Failed to process file",
+            variant: "destructive",
+          });
+        }
+        return;
+      }
+    }
+
+    // Use regular content simplification
     const requestData = {
       content: content.trim(),
       category,
@@ -119,7 +194,7 @@ export function MainPage() {
 
     simplifyContent(requestData);
     
-    // Scroll to results after a short delay
+    // Scroll to results after a short delay  
     setTimeout(() => {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, 500);
@@ -303,7 +378,7 @@ export function MainPage() {
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileUpload}
-                  accept=".pdf,.txt,.md,.doc,.docx,image/*"
+                  accept=".pdf,.txt,.md,.doc,.docx,image/*,.xlsx,.xls,.csv"
                   className="hidden"
                 />
                 <Button
@@ -317,7 +392,7 @@ export function MainPage() {
                     Upload File
                   </span>
                   <span className="text-xs text-gray-500">
-                    PDF, Markdown, Text, Images, Documents
+                    PDF, Text, Images (with OCR), Excel/CSV, Documents
                   </span>
                 </Button>
                 

@@ -1,5 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
 import { 
   simplifyContentSchema, 
   followupQuestionRequestSchema,
@@ -8,9 +11,162 @@ import {
 } from "@shared/schema";
 import { extractAndSimplifyContent, answerFollowupQuestion } from "./services/claude";
 import { storage } from "./storage";
+import { fileProcessor } from "./services/file-processor";
 import { z } from "zod";
 
+// Configure multer for file uploads
+const upload = multer({
+  dest: 'temp/', // temporary directory for uploads
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    // Allow common file types
+    const allowedTypes = [
+      'application/pdf',
+      'text/plain',
+      'text/markdown',
+      'image/jpeg',
+      'image/jpg', 
+      'image/png',
+      'image/gif',
+      'image/bmp',
+      'image/tiff',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel', // .xls
+      'text/csv'
+    ];
+    
+    if (allowedTypes.includes(file.mimetype) || file.originalname.toLowerCase().endsWith('.csv')) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Unsupported file type: ${file.mimetype}. Supported formats: PDF, text, markdown, images (JPG, PNG, GIF, BMP, TIFF), and spreadsheets (Excel, CSV).`));
+    }
+  }
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  
+  // Enhanced file upload endpoint
+  app.post("/api/upload", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({
+          success: false,
+          message: "No file uploaded"
+        });
+      }
+
+      const { category = 'other', saveToHistory = false } = req.body;
+      let extractedContent = '';
+      let processingMethod = 'Unknown';
+
+      // Try enhanced file processing first
+      const enhancedResult = await fileProcessor.processFile(
+        req.file.path,
+        req.file.originalname,
+        req.file.mimetype
+      );
+
+      if (enhancedResult.success) {
+        extractedContent = enhancedResult.content;
+        processingMethod = enhancedResult.processingMethod;
+      } else if (enhancedResult.error !== 'Use existing file processing method') {
+        // Enhanced processing failed with a real error
+        fileProcessor.cleanupTempFile(req.file.path);
+        return res.status(400).json({
+          success: false,
+          message: enhancedResult.error || 'Failed to process file'
+        });
+      } else {
+        // Fall back to basic processing for PDF and text files
+        try {
+          extractedContent = fs.readFileSync(req.file.path, 'utf-8');
+          processingMethod = 'Basic text extraction';
+        } catch (error) {
+          fileProcessor.cleanupTempFile(req.file.path);
+          return res.status(400).json({
+            success: false,
+            message: 'Failed to extract content from file'
+          });
+        }
+      }
+
+      if (!extractedContent || extractedContent.trim().length < 10) {
+        fileProcessor.cleanupTempFile(req.file.path);
+        return res.status(400).json({
+          success: false,
+          message: 'No readable content found in the file'
+        });
+      }
+
+      // Clean up temp file
+      fileProcessor.cleanupTempFile(req.file.path);
+
+      // Process with AI
+      const result = await extractAndSimplifyContent(
+        extractedContent, 
+        `file:${req.file.mimetype}:${processingMethod}`
+      );
+
+      if (saveToHistory === 'true' || saveToHistory === true) {
+        // Save to database
+        const savedExplanation = await storage.createExplanation({
+          title: result.title,
+          originalContent: extractedContent,
+          simplifiedContent: result.simplified,
+          category,
+          sourceUrl: `file:${req.file.originalname}`,
+          isBookmarked: false
+        });
+
+        res.json({ 
+          success: true, 
+          explanation: {
+            ...savedExplanation,
+            followups: []
+          },
+          fileInfo: {
+            originalName: req.file.originalname,
+            size: req.file.size,
+            processingMethod
+          }
+        });
+      } else {
+        // Return session-based explanation
+        res.json({ 
+          success: true, 
+          explanation: {
+            id: `session-${Date.now()}`,
+            title: result.title,
+            originalContent: extractedContent,
+            simplifiedContent: result.simplified,
+            category,
+            sourceUrl: `file:${req.file.originalname}`,
+            createdAt: new Date(),
+            followups: []
+          },
+          fileInfo: {
+            originalName: req.file.originalname,
+            size: req.file.size,
+            processingMethod
+          }
+        });
+      }
+
+    } catch (error) {
+      // Clean up temp file on error
+      if (req.file) {
+        fileProcessor.cleanupTempFile(req.file.path);
+      }
+      
+      console.error('File upload error:', error);
+      res.status(500).json({
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to process uploaded file'
+      });
+    }
+  });
   
   // Simplify content endpoint with optional save to history
   app.post("/api/simplify", async (req, res) => {

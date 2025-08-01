@@ -34,6 +34,30 @@ export async function simplifyContent(data: SimplifyContentRequest & { contentTy
   return await res.json();
 }
 
+// Enhanced file upload with processing
+export async function uploadAndProcessFile(
+  file: File, 
+  category: string, 
+  saveToHistory: boolean = false
+): Promise<SimplifyResponse & { fileInfo?: any }> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('category', category);
+  formData.append('saveToHistory', saveToHistory.toString());
+
+  const response = await fetch('/api/upload', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to upload and process file');
+  }
+
+  return await response.json();
+}
+
 // Removed database-dependent functions - app is now session-based only
 
 export async function addFollowupQuestion(data: FollowupQuestionRequest): Promise<FollowupResponse> {
