@@ -9,7 +9,7 @@ import {
   searchExplanationsSchema,
   saveExplanationSchema
 } from "@shared/schema";
-import { extractAndSimplifyContent, answerFollowupQuestion } from "./services/claude";
+import { extractAndSimplifyContent, answerFollowupQuestion } from "./services/deepseek";
 import { storage } from "./storage";
 import { fileProcessor } from "./services/file-processor";
 import { z } from "zod";

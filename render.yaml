@@ -1,0 +1,27 @@
+# Render Blueprint for content_simplified.
+# One always-on-capable web service running the Express server, which serves
+# both the API and the built React client. Chosen over serverless because the
+# AI calls, server-side URL fetch, tesseract OCR, and disk-based file uploads
+# all fight a 10-second function timeout. See
+# Deployed-apps/audits/content_simplified.md.
+#
+# Secrets are marked sync: false, so their values are set in the Render
+# dashboard, never stored in this file or the repository. Render injects PORT
+# automatically; the server reads process.env.PORT.
+
+services:
+  - type: web
+    name: content-simplified
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_VERSION
+        value: "20.16.11"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
