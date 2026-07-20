@@ -1,5 +1,7 @@
 # Content Simplifier - Comprehensive Testing Guide
 
+> Status note (July 20, 2026): The app now runs on Render with Neon Postgres and uses the DeepSeek API, not Anthropic Claude. Test against the live app at https://content-simplified.onrender.com or a local build. Any Claude-specific or Replit-specific steps below are historical. The test scenarios themselves still apply.
+
 ## Overview
 This guide provides step-by-step test cases for all implemented features in the Content Simplifier application.
 

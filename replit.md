@@ -1,5 +1,7 @@
 # Content Simplifier - AI-Powered Content Understanding Companion
 
+> Status note (July 20, 2026): This document predates the migration off Replit. The app now runs on a Render web service with a Neon Postgres database, and the AI provider is DeepSeek, not Anthropic Claude. Live URL: https://content-simplified.onrender.com. See README.md for current architecture and setup. The content below is kept for history.
+
 ## Overview
 
 Content Simplifier is a React-based web application that transforms complex content into clear, understandable explanations using AI. Users can input text content, URLs, or upload files, and the system uses Claude AI to generate simplified explanations with real-world analogies and examples. The application includes an interactive follow-up question system and basic content organization features.

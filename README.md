@@ -1,162 +1,102 @@
-# Content Simplifier - AI-Powered Content Understanding Companion
+# Content Simplifier
 
-Transform complex content into clear, understandable explanations using AI-powered simplification with real-world examples and analogies.
+Turn complex content into clear, plain-language explanations with real-world examples and analogies. Paste text, give a URL, or upload a file, and get an easy-to-understand explanation you can ask follow-up questions about and save to a searchable history.
+
+Live app: https://content-simplified.onrender.com
 
 ## Overview
 
-Content Simplifier is a React-based web application that uses Anthropic's Claude AI to help users understand complex content through simplified explanations. The app provides a session-based experience for processing text, URLs, and file uploads with interactive follow-up capabilities.
+Content Simplifier is a React and Express web application. It uses the DeepSeek API to explain content in simple terms. It handles pasted text, web page URLs (fetched server-side), and file uploads (PDF, text, images via OCR, and spreadsheets). Explanations can be kept in a Postgres database as a searchable, bookmarkable history, or used in a session-only mode that saves nothing.
 
-## ✅ Implemented Features
+## Features
 
-### Core Content Processing
-- **Text Simplification**: Paste any text content and get AI-powered explanations with real-world analogies
-- **URL Processing**: Direct URL content retrieval and simplification using Claude's web search capabilities
-- **File Upload Support**: 
-  - PDF documents (up to 100MB)
-  - Text files (.txt, .md)
-  - Image files for content extraction
-  - Drag-and-drop and click-to-upload functionality
-- **Content Truncation**: Automatic handling of large documents to prevent API token limits (150k character limit)
+Content processing:
+- Text simplification: paste any text and get a plain-language explanation with analogies.
+- URL processing: paste a link and the server fetches the page, extracts its text, and explains it. Private and local addresses are blocked for safety.
+- File uploads: PDF, text and markdown, images (read with OCR), and spreadsheets (Excel, CSV).
+- Large content is truncated to stay within model limits (150k characters).
 
-### Content Organization
-- **Category Classification**: AI, Money, Tech, Business, Other with visual badges
-- **Source Citations**: Automatic citation display for web-searched content
-- **Plain Text Output**: Clean, readable explanations without markdown formatting
+Organization and history:
+- Category classification: AI, money, tech, business, other.
+- Save to history: optionally store an explanation in the database.
+- Search and filter history by text, category, bookmark, date range, and content type.
+- Bookmark explanations for later.
 
-### Interactive Features
-- **Context-Aware Follow-up Questions**: Ask additional questions about simplified content with full context retention
-- **Loading Indicators**: Visual feedback for both main simplification and follow-up processing
-- **Copy Functionality**: One-click copying of explanations to clipboard
-- **Clear/Reset Options**: 
-  - Clickable logo to return to home screen
-  - "Clear & Start Over" button after content processing
+Interactive:
+- Context-aware follow-up questions about an explanation.
+- Copy an explanation to the clipboard.
+- Clear and start over.
 
-### User Experience
-- **Session-Based Architecture**: No database required - content exists during browser session only
-- **Responsive Design**: Works on desktop and mobile devices
-- **Error Handling**: User-friendly error messages including rate limit notifications
-- **Toast Notifications**: Clear feedback for all user actions
+## Technology stack
 
-### Content Type Handling
-- **YouTube Video Detection**: Special handling with clear instructions for transcript copying
-- **Web Search Integration**: Automatic content retrieval from regular websites
-- **Large File Processing**: Safe handling of oversized PDFs and documents
-- **Content Type Detection**: Automatic identification of uploaded file types
+Frontend:
+- React 18 with TypeScript, built with Vite.
+- Tailwind CSS and shadcn/ui components.
+- TanStack Query for data fetching, Wouter for routing.
 
-### Technical Features
-- **Rate Limit Management**: Graceful handling of API rate limits with user-friendly messaging
-- **Real-time Updates**: Hot module reloading in development
-- **TypeScript**: Full type safety throughout the application
-- **Modern UI**: Shadcn/ui components with Tailwind CSS styling
+Backend:
+- Node.js with Express (TypeScript). One process serves the API and the built client.
+- DeepSeek API (`deepseek-chat`) as the AI provider.
+- Drizzle ORM over Neon serverless Postgres.
+- Multer for uploads, Tesseract for image OCR, xlsx and csv-parser for spreadsheets.
+- Zod for request validation.
 
-## 🚧 Features Yet to Be Implemented
+Hosting:
+- Render web service (the always-on server), Neon Postgres for storage. See `render.yaml`.
 
-### Content Management
-- **Content History**: Save and retrieve previously simplified explanations
-- **Export Options**: Download explanations as PDF, Word, or text files
-- **Bookmark System**: Save favorite explanations for later reference
-- **Search Functionality**: Search through saved explanations
+## Getting started (local)
 
-### Enhanced Processing
-- **Batch Processing**: Process multiple files or URLs simultaneously
-- **Video Transcript Integration**: Direct YouTube/video transcript processing
-- **Audio File Support**: Process podcast transcripts and audio content
-- **Advanced File Types**: Excel, PowerPoint, and other document formats
-
-### Collaboration Features
-- **Share Explanations**: Generate shareable links for explanations
-- **Team Workspaces**: Collaborative content simplification
-- **Comment System**: Add notes and comments to explanations
-- **Version History**: Track changes to explanations over time
-
-### Customization Options
-- **Explanation Styles**: Choose between different explanation approaches (technical, beginner, expert)
-- **Length Controls**: Specify desired explanation length (brief, detailed, comprehensive)
-- **Language Support**: Multi-language content processing and explanations
-- **Custom Categories**: User-defined content categories
-
-### Advanced Features
-- **AI Model Selection**: Choose between different AI models for processing
-- **Explanation Comparison**: Compare explanations from different AI models
-- **Content Summarization**: Generate executive summaries of long content
-- **Key Concepts Extraction**: Highlight and define important terms
-
-### Integration & API
-- **Browser Extension**: Process content directly from web pages
-- **API Access**: Developer API for integrating with other applications
-- **Webhook Support**: Real-time notifications for processed content
-- **Third-party Integrations**: Connect with note-taking apps, CMS systems
-
-### Analytics & Insights
-- **Usage Statistics**: Track content processing history and patterns
-- **Content Analytics**: Insights into frequently processed topics
-- **Performance Metrics**: Processing speed and accuracy measurements
-- **User Feedback System**: Rating and improvement suggestions for explanations
-
-## Technology Stack
-
-### Frontend
-- **React 18** with TypeScript
-- **Vite** for build tooling and development
-- **Tailwind CSS** for styling
-- **Shadcn/ui** component library
-- **TanStack Query** for API state management
-- **Wouter** for routing (prepared for future multi-page features)
-
-### Backend
-- **Node.js** with Express.js
-- **TypeScript** for type safety
-- **Anthropic Claude API** (claude-sonnet-4-20250514)
-- **Zod** for schema validation
-- **Session-based storage** (no database required)
-
-### Development Tools
-- **ESBuild** for fast JavaScript bundling
-- **Drizzle ORM** (configured but not used in current session-based architecture)
-- **PostgreSQL** support ready for future persistent storage features
-
-## Getting Started
-
-1. **Install Dependencies**:
+1. Install dependencies:
    ```bash
    npm install
    ```
 
-2. **Set Environment Variables**:
+2. Create a `.env` from the template and fill in the values:
    ```bash
-   ANTHROPIC_API_KEY=your_claude_api_key
+   cp .env.example .env
+   ```
+   - `DATABASE_URL`: a Neon (or any Postgres) connection string.
+   - `DEEPSEEK_API_KEY`: your DeepSeek API key.
+
+3. Create the database tables:
+   ```bash
+   npm run db:push
    ```
 
-3. **Start Development Server**:
+4. Start the development server:
    ```bash
    npm run dev
    ```
+   Open `http://localhost:5000`.
 
-4. **Access Application**:
-   Open `http://localhost:5000` in your browser
+For a production build: `npm run build`, then `npm run start`.
 
-## Project Architecture
+## Trying it
 
-- **Session-Based**: Pure client-session architecture with no persistent storage
-- **API-First**: RESTful API design ready for future mobile/desktop clients
-- **Component-Driven**: Modular React components with TypeScript interfaces
-- **Error-Resilient**: Comprehensive error handling and user feedback
-- **Scalable**: Architecture ready for database integration and advanced features
+See [TESTING_GUIDE.md](TESTING_GUIDE.md) for detailed test cases. A quick check against the live app:
+- Paste a paragraph of text and read the explanation.
+- Paste a public article URL and confirm the explanation reflects the real page.
+- Upload a PDF or an image with text.
+- Turn on save to history, then open the history page to see it.
 
-## API Endpoints
+## API endpoints
 
-- `POST /api/simplify` - Process and simplify content
-- `POST /api/followup` - Answer follow-up questions with context
+- `POST /api/simplify`: simplify pasted text or a URL. Saves to history when `saveToHistory` is true.
+- `POST /api/upload`: upload and simplify a file.
+- `POST /api/followup`: answer a follow-up question with the original explanation as context.
+- `GET /api/explanations`: list saved history.
+- `POST /api/explanations/search`: search and filter history.
+- `POST /api/explanations/:id/bookmark`: toggle a bookmark.
+- `DELETE /api/explanations/:id`: delete an explanation.
 
-## Rate Limits
+## Project structure
 
-The application uses Anthropic's Claude API with the following limits:
-- 30,000 input tokens per minute
-- 8,000 output tokens per minute
-- 50 requests per minute
+- `client/`: React frontend (Vite).
+- `server/`: Express server, routes, storage, and services (`deepseek.ts` is the AI provider).
+- `shared/`: Drizzle schema and shared types.
+- `render.yaml`: Render deployment blueprint.
 
-Rate limit errors are handled gracefully with user-friendly messaging.
+## Notes
 
-## Contributing
-
-This project follows modern React and TypeScript best practices. All new features should include proper TypeScript types, error handling, and user feedback mechanisms.
+- The server never sends AI or database credentials to the client. Secrets live only in environment variables.
+- `server/services/claude.ts` is a dormant earlier Anthropic implementation, kept for reference and not used.

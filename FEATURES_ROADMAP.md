@@ -1,5 +1,7 @@
 # Content Simplifier - Comprehensive Features Roadmap
 
+> Status note (July 20, 2026): Since this roadmap was written, the app migrated off Replit to a Render web service with a Neon Postgres database, and the AI provider changed from Anthropic Claude to DeepSeek. Several items once listed as future work are now live: saved history, search and filter, and bookmarks. See README.md for the current feature set. The content below is kept for history.
+
 ## Overview
 This document outlines the complete feature set for the Content Simplifier application, organized by priority and development phases. The application is designed to transform complex content into clear, understandable explanations using AI-powered processing.
 
