@@ -100,3 +100,5 @@ See [TESTING_GUIDE.md](TESTING_GUIDE.md) for detailed test cases. A quick check 
 
 - The server never sends AI or database credentials to the client. Secrets live only in environment variables.
 - `server/services/claude.ts` is a dormant earlier Anthropic implementation, kept for reference and not used.
+
+Last updated: July 20, 2026
